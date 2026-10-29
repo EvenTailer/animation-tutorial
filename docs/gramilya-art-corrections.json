@@ -1,0 +1,37 @@
+{
+  "generator": "built-in ImageGen",
+  "corrections": [
+    [
+      "duck-head-steps",
+      "Keep EXACT 4x3 grid all panel positions, same same ivory paper and character. Correct only panel10 (row3 col2) to show TOP crest tufts but smooth cheek contours, leaving cheek feathers to panel11. Correct panel12 (row3 col4) to CLEAN UNCOLOURED INK LINEART of finished head, remove orange bill, pink feather/skin fill and dark solid neck color; NO color appears as part of cleaning. Retain black pupils, linework and cyber eye rim outlines. All remaining panels unchanged. It is a beginner line-by-line drawing lesson, not finished coloring at step12."
+    ],
+    [
+      "duck-arms-steps",
+      "Preserve EXACT 4x3 grid composition. Correct final row and ONLY final row: panel9 row3col1 LEFT mechanical palm extends FOUR simple straight unsegmented finger rods and NO THUMB. panel10 row3col2 adds mechanical THUMB to those four rods, all unsegmented. panel11 row3col3 adds articulated JOINT SEGMENTS to all5 LEFT metal fingers. panel12 row3col4 adds longitudinal forearm cables/rods, hand remains completed segments. In all12 panels viewer LEFT mechanical / viewer RIGHT organic gloved. Keep torso/shirt/organic arm as pale construction context in final row, NO sudden fullcolor skin/shirt and NO extra new colored neck. Organic glove can remain black as in panel6. Mechanical parts are lineart with limited charcoal structure, do not add colors. Only one visible new operation each stage. Preserve panels1–8 unchanged."
+    ],
+    [
+      "duck-legs-steps",
+      "Retain EXACT4x3 same composition and all original trouser progression. Correct shoe stages in panels8–11: panel8 row2col4 has ONLY OUTER sneaker silhouettes below ankles, no sole thickness, no panels, NO LACES. panel9 row3col1 adds ONLY thick double sole contour, shoe uppers still blank. panel10 row3col2 adds tongues and structural side panels, still NO LACES. panel11 row3col3 adds crisscross laces and eyelets to same shoes. panel12 adds trouser side stripes as original. Keep all other panels identical, same scale and ivory background. No skipped details, beginner must see each addition."
+    ],
+    [
+      "duck-finish-steps",
+      "Preserve EXACT4x3 sheet and every composition. Correct panel4 row1col4 (skin/feather flat base) so bill remains paper-white uncolored and organic glove also paper-white uncolored. Panel5 row2col1 adds ORANGE BILL fill for first time, glove still paper-white; do not add any other change to panel5. Panel6 adds beige shirt like original, glove remains paper-white. Panel7 dark bases first fills black glove along with trousers metal and shoes. All remaining steps unchanged. This is sequential color-by-region lesson; color must not appear early then vanish."
+    ],
+    [
+      "boss-head-steps",
+      "Preserve EXACT4x3 composition, every other panel unchanged. Only panel12 row3col4 must be CLEAN UNCOLOURED INK LINEART of finished wolf head/mane after erasing guiding axes, NOT a sudden full-colour render. Remove all charcoal fur/cream/gold/pink fills; leave ivory paper through fur/muzzle and only black outline/pupils/nose ink, same character. Coloring is taught much later. Closed mouth unchanged, no fangs."
+    ],
+    [
+      "boss-body-steps",
+      "Preserve EXACT4x3 composition and same wolf design and all other11panels. Correct ONLY panel11 row3col3. The ORGANIC muscular arm on VIEWER LEFT with bandaged wrist must be IDENTICAL to panel10, complete alive hand/claws/fur/bandages, NO robotic plates or mechanical joints there. In this same panel11 construct the DARK MECHANICAL ARM FRAMEWORK only on VIEWER RIGHT where the prosthesis belongs, no ivory plates yet. Panel12 remains unchanged with finished white plates on RIGHT and organic LEFT. Do not switch hands, do not change any other panel or torso."
+    ],
+    [
+      "duck-run-frames",
+      "Preserve exact4cols2rows8square-cell grid, ivory background, same duck outfit, scale and ground. Keep TOP ROW frames1–4 unchanged. Correct BOTTOM ROW frames5–8 to genuine OPPOSITE-SIDE half cycle, not duplicates of top. Top row has mechanical near arm BACK and organic far arm FORWARD, so bottom row must show mechanical near arm FORWARD bent elbow in front of chest, organic far arm BACK beside hip. Preserve implant identity; do NOT reflect whole character, head still faces right. Also reverse which leg is near/far: bottom5 near leg BACK while far leg forward contacts, bottom6 near knee passes forward while far knee compresses, bottom7 far leg pushes off while near leg swings forward, bottom8 near leg forward far leg behind in flight. Detail near/far with overlap/occlusion. Same eight temporal stages. Full colored original duck in all frames, NOT simply swapping gloves, MOVE shoulders elbows knees and feet."
+    ]
+  ],
+  "finalCorrections": [
+    "Run frame7 only: retain the forward mechanical arm and replace the extra rear mechanical hand with organic skin and black fingerless glove, matching frames5/6/8; all other cells unchanged.",
+    "Duck head sheet all12cells: remove every mechanical neck/shoulder/shirt context below the heads, leaving blank ivory paper. Keep all twelve head positions and additions unchanged. First panel contains only a light oval. Final panel is clean uncoloured head lineart."
+  ]
+}

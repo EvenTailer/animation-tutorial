@@ -1,0 +1,115 @@
+.character-animation {
+  margin: 0;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--panel);
+}
+.character-animation-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 16px 18px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.character-animation-heading > span:first-child {
+  color: var(--ink);
+  font-weight: 600;
+}
+.character-animation-heading > span:last-child {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.character-animation-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f0e7;
+  min-height: 240px;
+  isolation: isolate;
+}
+.character-animation-raster {
+  width: 100%;
+  background-repeat: no-repeat;
+  flex-shrink: 0;
+  background-color: #f3f0e7;
+}
+.character-animation-loading {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  padding: 8px 11px;
+  background: #f7f5eaf2;
+  color: #55634e;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.character-animation-error {
+  color: #55634e;
+  max-width: 340px;
+  padding: 30px 24px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.character-animation-ground {
+  padding: 8px 18px 10px;
+  background: #f3f0e7;
+  border-top: 2px solid #b4bfa5;
+  color: #6b775f;
+  font-size: 9px;
+  line-height: 1.5;
+  text-align: center;
+  letter-spacing: 0.2px;
+}
+.character-animation-caption {
+  padding: 17px 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.character-animation-caption strong {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+  font-weight: 600;
+}
+.character-animation-caption > span {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.character-animation-note {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 13px 18px 18px;
+}
+@media (max-width: 600px) {
+  .character-animation-heading {
+    padding: 13px 14px;
+    font-size: 10px;
+    gap: 10px;
+  }
+  .character-animation-stage {
+    min-height: 220px;
+  }
+  .character-animation-caption {
+    padding: 15px 14px 0;
+  }
+  .character-animation-caption strong {
+    font-size: 13px;
+  }
+  .character-animation-note {
+    margin: 12px 14px 16px;
+  }
+  .character-animation-ground {
+    padding: 7px 12px 9px;
+    font-size: 8px;
+  }
+}

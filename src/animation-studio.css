@@ -1,0 +1,255 @@
+.as-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 25px 0;
+}
+.as-tabs button {
+  padding: 17px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel);
+  font-weight: 600;
+  font-size: 13px;
+  min-height: 65px;
+}
+.as-tabs button span {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 7px;
+  font-weight: 400;
+}
+.as-tabs .selected,
+.as-frame-strip .selected {
+  background: var(--green);
+  color: #27362a;
+  border-color: #93a86a;
+}
+.as-setup {
+  padding: 19px 22px;
+  background: var(--sub);
+  border-radius: 7px;
+  margin: 24px 0;
+}
+.as-setup summary {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 14px;
+  cursor: pointer;
+  min-height: 44px;
+  font-weight: 600;
+}
+.as-setup p {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 17px 0 0;
+}
+.as-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  padding: 12px;
+  border-radius: 7px;
+  margin-bottom: 24px;
+  overflow-anchor: none;
+}
+.as-frame-strip {
+  display: flex;
+  flex: 1;
+  gap: 7px;
+  overflow-x: auto;
+}
+.as-frame-strip button {
+  position: relative;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 5px;
+  font-size: 12px;
+}
+.as-frame-strip button svg {
+  position: absolute;
+  right: 3px;
+  top: 3px;
+}
+.as-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 30px;
+  align-items: start;
+  overflow-anchor: none;
+  min-height: 800px;
+}
+.as-player {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  overflow: hidden;
+  position: sticky;
+  top: 95px;
+  min-width: 0;
+}
+.as-player-art {
+  position: relative;
+}
+.as-onion {
+  position: absolute;
+  inset: 0;
+  opacity: 0.23;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: multiply;
+}
+.as-controls {
+  padding: 17px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.as-controls .secondary,
+.as-controls .primary {
+  font-size: 11px;
+  padding: 12px;
+}
+.as-controls label {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--muted);
+}
+.as-controls select {
+  padding: 9px;
+  font-size: 11px;
+}
+.as-player > .text-button {
+  margin: 0 17px 15px;
+}
+.as-instruction h2 {
+  margin: 14px 0;
+  font-size: 29px;
+}
+.as-action {
+  font-size: 17px;
+  line-height: 1.85;
+}
+.as-focus {
+  padding: 20px;
+  background: var(--sub);
+  border-radius: 7px;
+  margin: 25px 0;
+}
+.as-focus strong {
+  font-size: 12px;
+}
+.as-focus p {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 10px 0 0;
+}
+.as-check h3 {
+  font-size: 18px;
+}
+.as-check ul {
+  padding-left: 21px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.as-check li {
+  margin: 9px 0;
+}
+.as-instruction > .primary {
+  width: 100%;
+  margin-top: 18px;
+}
+.as-next {
+  padding: 25px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  margin: 35px 0;
+}
+.as-next h2 {
+  font-size: 26px;
+}
+.as-next p {
+  font-size: 14px;
+  color: var(--muted);
+}
+.as-next p:last-child {
+  font-size: 11px;
+  margin-bottom: 0;
+}
+@media (max-width: 1000px) {
+  .as-workspace {
+    grid-template-columns: 1fr;
+    min-height: 1300px;
+  }
+  .as-player {
+    position: static;
+  }
+  .as-tabs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .as-tabs button {
+    padding: 14px;
+    font-size: 12px;
+  }
+  .as-toolbar {
+    padding: 8px;
+    gap: 7px;
+  }
+  .as-toolbar > .secondary {
+    padding: 10px;
+  }
+  .as-frame-strip {
+    gap: 5px;
+  }
+  .as-instruction h2 {
+    font-size: 27px;
+  }
+  .as-action {
+    font-size: 16px;
+  }
+  .as-controls .secondary,
+  .as-controls .primary {
+    width: 100%;
+  }
+  .as-controls label {
+    width: 100%;
+  }
+  .as-next {
+    padding: 21px;
+  }
+  .as-setup {
+    padding: 17px;
+  }
+  .as-workspace {
+    min-height: 1250px;
+  }
+}
+.as-onion .character-animation-heading,
+.as-onion .character-animation-caption,
+.as-onion .character-animation-ground,
+.as-onion .character-animation-note {
+  visibility: hidden;
+}
+.as-onion .character-animation {
+  border-color: transparent;
+  background: transparent;
+}
+.as-controls {
+  border-bottom: 1px solid var(--line);
+}

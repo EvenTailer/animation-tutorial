@@ -130,3 +130,22 @@
   margin: auto;
   background-repeat: no-repeat;
 }
+.brand {
+  font-size: 22px;
+  letter-spacing: -0.9px;
+}
+.brand-mark {
+  font-size: 27px;
+}
+.brand-sub {
+  font-size: 6px;
+  letter-spacing: 1.35px;
+}
+.side-note {
+  margin-top: 26px;
+  margin-bottom: 26px;
+}
+.footer-brand {
+  font-size: 18px;
+  letter-spacing: -0.7px;
+}

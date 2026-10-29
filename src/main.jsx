@@ -24,9 +24,21 @@ import {
 import { weeks } from "./data/curriculum";
 import Diagram, { motionFrames, getDiagramType } from "./Diagram";
 import Masterclass from "./Masterclass";
+import AnimationStudio from "./AnimationStudio";
+import CharacterAnimation, { animationFrames } from "./CharacterAnimation";
 import { masterclasses } from "./data/masterclasses";
 import "./style.css";
 import "./drawing-path.css";
+const roadmapCopy = {
+  3: [
+    "Голова: повторяй за мной",
+    "От одного овала до хохолка — крупным планом",
+  ],
+  4: ["Тело, шея и майка", "По одной форме, детали и складке"],
+  5: ["Руки, брюки и обувь", "Пальцы, протез, карманы и шнуровка"],
+  6: ["Цельный герой в цвете", "Контур, заливки, свет и материалы"],
+  7: ["Герой оживает", "Первое дыхание полного персонажа"],
+};
 
 const apps = [
   {
@@ -119,18 +131,20 @@ function App() {
     [drawingCourse, setDrawingCourse] = useState("duck"),
     [drawingStart, setDrawingStart] = useState(null),
     [drawingSession, setDrawingSession] = useState(0),
+    [animationType, setAnimationType] = useState("idle"),
     [drawingProgress, setDrawingProgress] = useState(() =>
-      read("shtrih-masterclass-progress-v1", {}),
+      read("shtrih-masterclass-progress-v2", {}),
     );
   const duckSteps = masterclasses[0].chapters.flatMap((c) => c.steps);
   const duckDone = duckSteps.filter(
     (s) => drawingProgress[`duck:${s.id}`],
   ).length;
   const drawingWeekStages = {
-    3: [0, 1],
-    4: [2, 3, 4, 5],
-    5: Array.from({ length: 12 }, (_, i) => i + 6),
-    10: Array.from({ length: 12 }, (_, i) => i),
+    3: Array.from({ length: 12 }, (_, i) => i),
+    4: Array.from({ length: 12 }, (_, i) => i + 12),
+    5: Array.from({ length: 24 }, (_, i) => i + 24),
+    6: Array.from({ length: 12 }, (_, i) => i + 48),
+    10: Array.from({ length: 36 }, (_, i) => i),
   };
   function weekDrawingProgress(w) {
     const indices = drawingWeekStages[w.id];
@@ -150,7 +164,7 @@ function App() {
   }
   useEffect(() => {
     const refresh = () =>
-      setDrawingProgress(read("shtrih-masterclass-progress-v1", {}));
+      setDrawingProgress(read("shtrih-masterclass-progress-v2", {}));
     window.addEventListener("shtrih-progress-change", refresh);
     return () => window.removeEventListener("shtrih-progress-change", refresh);
   }, []);
@@ -161,7 +175,7 @@ function App() {
     next = lessons.find((l) => !done.includes(l.id)) || lessons[0],
     pct = Math.round((done.length / lessons.length) * 100),
     diagramType = getDiagramType(lesson),
-    frameNames = motionFrames[diagramType],
+    frameNames = animationFrames[diagramType] || motionFrames[diagramType],
     motion = !!frameNames,
     frameCount = frameNames?.length || 1;
   useEffect(() => {
@@ -184,6 +198,7 @@ function App() {
     return () => clearInterval(t);
   }, [playing, motion, lesson, frame]);
   function go(v) {
+    setPlaying(false);
     setView(v);
     setMenu(false);
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -194,6 +209,10 @@ function App() {
     setDrawingStart(startAt);
     setDrawingSession((n) => n + 1);
     go("masterclass");
+  }
+  function openAnimation(type = "idle") {
+    setAnimationType(type);
+    go("animation");
   }
   function open(id) {
     setSelected(id);
@@ -214,12 +233,14 @@ function App() {
     const blob = new Blob(
       [
         JSON.stringify({
-          version: 2,
+          version: 3,
           completed: done,
           device,
           theme,
           masterclassProgress: drawingProgress,
-          masterclassCursor: read("shtrih-masterclass-cursor-v1", {}),
+          masterclassCursor: read("shtrih-masterclass-cursor-v2", {}),
+          animationProgress: read("gramilya-animation-progress-v1", {}),
+          previousDrawingProgress: read("shtrih-masterclass-progress-v1", {}),
         }),
       ],
       { type: "application/json" },
@@ -227,16 +248,16 @@ function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "shtrih-progress.json";
+    a.download = "gramilya-progress.json";
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   async function restore(e) {
     try {
       const data = JSON.parse(await e.target.files[0].text());
-      if (![1, 2].includes(data.version) || !Array.isArray(data.completed))
+      if (![1, 2, 3].includes(data.version) || !Array.isArray(data.completed))
         throw Error();
-      if (data.version === 2) {
+      if (data.version === 3) {
         const validKeys = new Set(
           masterclasses.flatMap((c) =>
             c.chapters.flatMap((ch) => ch.steps.map((s) => `${c.id}:${s.id}`)),
@@ -262,14 +283,48 @@ function App() {
           ]),
         );
         localStorage.setItem(
-          "shtrih-masterclass-progress-v1",
+          "shtrih-masterclass-progress-v2",
           JSON.stringify(restored),
         );
         localStorage.setItem(
-          "shtrih-masterclass-cursor-v1",
+          "shtrih-masterclass-cursor-v2",
           JSON.stringify(cursors),
         );
         setDrawingProgress(restored);
+        if (
+          data.previousDrawingProgress &&
+          typeof data.previousDrawingProgress === "object" &&
+          !Array.isArray(data.previousDrawingProgress)
+        ) {
+          localStorage.setItem(
+            "shtrih-masterclass-progress-v1",
+            JSON.stringify(data.previousDrawingProgress),
+          );
+        }
+        const validAnimationKeys = new Set(
+          Object.entries(animationFrames).flatMap(([type, frames]) =>
+            frames.map((_, index) => `${type}:${index}`),
+          ),
+        );
+        localStorage.setItem(
+          "gramilya-animation-progress-v1",
+          JSON.stringify(
+            Object.fromEntries(
+              Object.entries(data.animationProgress || {}).filter(
+                ([key, value]) => validAnimationKeys.has(key) && value === true,
+              ),
+            ),
+          ),
+        );
+      } else if (data.version === 2) {
+        localStorage.setItem(
+          "shtrih-masterclass-progress-v1",
+          JSON.stringify(data.masterclassProgress || {}),
+        );
+        localStorage.setItem(
+          "shtrih-masterclass-cursor-v1",
+          JSON.stringify(data.masterclassCursor || {}),
+        );
       }
       setDone([
         ...new Set(
@@ -281,7 +336,7 @@ function App() {
       alert("Прогресс восстановлен");
     } catch {
       alert(
-        "Не удалось прочитать файл прогресса. Выбери JSON, скачанный из Штриха.",
+        "Не удалось прочитать файл прогресса. Выбери JSON, скачанный из GRAMILYA.",
       );
     }
     e.target.value = "";
@@ -290,9 +345,9 @@ function App() {
     <div className="shell">
       <aside className={menu ? "sidebar mobile-open" : "sidebar"}>
         <button className="brand" onClick={() => go("home")}>
-          <span className="brand-mark">ш.</span>
+          <span className="brand-mark">G.</span>
           <span>
-            штрих<span className="brand-sub">МАСТЕРСКАЯ ПЕРСОНАЖА</span>
+            GRAMILYA<span className="brand-sub">МАСТЕРСКАЯ ПЕРСОНАЖА</span>
           </span>
         </button>
         <button
@@ -307,7 +362,8 @@ function App() {
           {[
             ["home", Route, "Мой маршрут"],
             ["masterclass", BookOpen, "Рисуем героя"],
-            ["lesson", PenTool, "Основы и анимация"],
+            ["animation", Play, "Анимация героя"],
+            ["lesson", PenTool, "Основы рисунка"],
             ["tools", SlidersHorizontal, "Инструменты"],
             ["library", Layers, "Шпаргалки"],
           ].map(([id, Icon, label]) => (
@@ -379,6 +435,7 @@ function App() {
                     home: "Мой маршрут",
                     lesson: "Занятие",
                     masterclass: "Рисуем героя",
+                    animation: "Анимация героя",
                     tools: "Инструменты",
                     library: "Шпаргалки",
                   }[view]
@@ -390,9 +447,9 @@ function App() {
             <span className="status-dot" />
             {saveError
               ? "Не удалось сохранить"
-              : `Герой: ${duckDone} из 18 этапов`}
+              : `Герой: ${duckDone} из ${duckSteps.length} шагов`}
             <span className="mini-progress">
-              <i style={{ width: (duckDone / 18) * 100 + "%" }} />
+              <i style={{ width: (duckDone / duckSteps.length) * 100 + "%" }} />
             </span>
           </button>
         </header>
@@ -411,8 +468,9 @@ function App() {
                   </h1>
                   <p>
                     Нарисуй именно этого кибер-утёнка: от построения до перьев,
-                    механики, складок и финальных бликов. 18 рисованных этапов,
-                    подробные действия и оригинал рядом — на всём пути.
+                    механики, складок и финальных бликов. 60 небольших шагов:
+                    крупный фрагмент и одно действие, которое ты повторяешь на
+                    планшете.
                   </p>
                   <button className="primary" onClick={() => openMasterclass()}>
                     {duckDone
@@ -428,9 +486,11 @@ function App() {
                   </button>
                   <div className="hero-meta">
                     <span>
-                      <Clock size={15} /> 18 этапов · в своём темпе
+                      <Clock size={15} /> 60 шагов · без спешки
                     </span>
-                    <span>Пройдено {duckDone}/18</span>
+                    <span>
+                      Пройдено {duckDone}/{duckSteps.length}
+                    </span>
                   </div>
                   <div className="hand-note">можно начать с нуля ↗</div>
                 </div>
@@ -517,6 +577,18 @@ function App() {
               <div className="roadmap">
                 {weeks.map((w, i) => {
                   const drawing = weekDrawingProgress(w);
+                  const weekTitle = roadmapCopy[w.id]?.[0] || w.title;
+                  const weekSubtitle = roadmapCopy[w.id]?.[1] || w.subtitle;
+                  const animation = { 7: "idle", 8: "run", 9: "hit" }[w.id];
+                  const animationDone = read(
+                    "gramilya-animation-progress-v1",
+                    {},
+                  );
+                  const poseCount = animation
+                    ? animationFrames[animation].filter(
+                        (_, f) => animationDone[`${animation}:${f}`],
+                      ).length
+                    : 0;
                   const count = w.lessons.filter((l) =>
                     done.includes(l.id),
                   ).length;
@@ -531,7 +603,10 @@ function App() {
                           {(
                             drawing
                               ? drawing.count === drawing.indices.length
-                              : count === 3
+                              : animation
+                                ? poseCount ===
+                                  animationFrames[animation].length
+                                : count === 3
                           ) ? (
                             <Check size={17} />
                           ) : (
@@ -541,7 +616,9 @@ function App() {
                       </div>
                       <div className="week-visual">
                         {i >= 2 && i <= 4 ? (
-                          <DrawingPreview step={duckSteps[[1, 4, 16][i - 2]]} />
+                          <DrawingPreview
+                            step={duckSteps[[11, 23, 35][i - 2]]}
+                          />
                         ) : i === 5 ? (
                           <img
                             className="week-reference"
@@ -552,6 +629,16 @@ function App() {
                             }
                             alt="Детальная отрисовка исходного героя"
                             loading="lazy"
+                          />
+                        ) : i >= 6 && i <= 8 ? (
+                          <DrawingPreview
+                            step={{
+                              sheet: `/assets/duck-${["idle", "run", "hit"][i - 6]}-frames.png`,
+                              columns: i === 6 ? 2 : i === 7 ? 4 : 3,
+                              rows: 2,
+                              panel: 0,
+                              title: "Полноцветная поза героя",
+                            }}
                           />
                         ) : i === 9 ? (
                           <img
@@ -571,16 +658,18 @@ function App() {
                           {i < 3 ? "ОСНОВЫ" : i < 7 ? "ПЕРСОНАЖ" : "ДВИЖЕНИЕ"}
                         </span>
                       </div>
-                      <h3>{w.title}</h3>
-                      <p>{w.subtitle}</p>
+                      <h3>{weekTitle}</h3>
+                      <p>{weekSubtitle}</p>
                       <div className="week-bottom">
                         <span>
                           {drawing
                             ? `${drawing.count}/${drawing.indices.length} этапов`
-                            : `${count}/3 занятия`}
+                            : animation
+                              ? `${poseCount}/${animationFrames[animation].length} поз`
+                              : `${count}/3 занятия`}
                         </span>
                         <button
-                          aria-label={`Открыть неделю ${w.id}: ${w.title}`}
+                          aria-label={`Открыть неделю ${w.id}: ${weekTitle}`}
                           onClick={() =>
                             drawing
                               ? openMasterclass(
@@ -592,10 +681,12 @@ function App() {
                                       ],
                                   ) ?? drawing.indices[0],
                                 )
-                              : open(
-                                  w.lessons.find((l) => !done.includes(l.id))
-                                    ?.id || w.lessons[0].id,
-                                )
+                              : i >= 6 && i <= 8
+                                ? openAnimation(["idle", "run", "hit"][i - 6])
+                                : open(
+                                    w.lessons.find((l) => !done.includes(l.id))
+                                      ?.id || w.lessons[0].id,
+                                  )
                           }
                         >
                           <ArrowUpRight size={20} />
@@ -625,9 +716,9 @@ function App() {
                     твоим боссом?
                   </h2>
                   <p>
-                    В подарок — подробная отрисовка этого кибер-волка. 12
-                    этапов: морда и грива, рваная майка, механическая лапа,
-                    хвост, цвет и текстуры. Его оригинал можно скачать.
+                    В подарок — подробная отрисовка этого кибер-волка. 36
+                    небольших шагов: морда и грива, рваная майка, механическая
+                    лапа, хвост, цвет и текстуры. Его оригинал можно скачать.
                   </p>
                   <button
                     className="secondary"
@@ -677,11 +768,14 @@ function App() {
                     сохранится, и ты сможешь к нему вернуться.
                   </p>
                 </div>
-                <button className="secondary" onClick={() => open(next.id)}>
-                  Основы и анимация <ArrowRight size={16} />
+                <button className="secondary" onClick={() => go("animation")}>
+                  Анимация полного героя <ArrowRight size={16} />
                 </button>
               </div>
             </>
+          )}
+          {view === "animation" && (
+            <AnimationStudio key={animationType} initial={animationType} />
           )}
           {view === "lesson" && (
             <>
@@ -726,11 +820,15 @@ function App() {
                           : `Этап ${stage + 1} / ${lesson.steps.length}`}
                       </span>
                     </div>
-                    <Diagram
-                      type={diagramType}
-                      stage={motion ? 3 : Math.min(3, stage)}
-                      frame={frame}
-                    />
+                    {animationFrames[diagramType] ? (
+                      <CharacterAnimation type={diagramType} frame={frame} />
+                    ) : (
+                      <Diagram
+                        type={diagramType}
+                        stage={motion ? 3 : Math.min(3, stage)}
+                        frame={frame}
+                      />
+                    )}
                     <div className="canvas-controls">
                       <button
                         className="secondary"
@@ -795,8 +893,9 @@ function App() {
                       </>
                     )}
                     <p className="caption">
-                      Упрощённая схема объясняет принцип. Рисуй в своей
-                      программе; детали героя добавляй постепенно.
+                      {animationFrames[diagramType]
+                        ? "Перед тобой полная поза героя. Повтори положение тела, затем перенеси знакомые детали костюма и материалы из мастер-класса."
+                        : "Упрощённая схема объясняет принцип. Рисуй в своей программе; детали героя добавляй постепенно."}
                     </p>
                   </div>
                 </div>
@@ -972,10 +1071,11 @@ function App() {
               <section className="info-panel">
                 <h2>Твой прогресс — у тебя</h2>
                 <p>
-                  Герой: {duckDone} из 18 этапов. Основы и анимация:{" "}
-                  {done.length} из 30 занятий ({pct}%). Отметки, программа и
-                  тема сохраняются в этом браузере. Очистка данных браузера
-                  удалит их. Рисунки хранятся в твоём приложении на планшете.
+                  Герой: {duckDone} из {duckSteps.length} шагов. Дополнительные
+                  упражнения: {done.length} из 30 занятий ({pct}%). Отметки,
+                  программа и тема сохраняются в этом браузере. Очистка данных
+                  браузера удалит их. Рисунки хранятся в твоём приложении на
+                  планшете.
                 </p>
                 <div className="link-row">
                   <button className="secondary" onClick={backup}>
@@ -999,9 +1099,12 @@ function App() {
                       ) {
                         setDone([]);
                         localStorage.removeItem(
-                          "shtrih-masterclass-progress-v1",
+                          "shtrih-masterclass-progress-v2",
                         );
-                        localStorage.removeItem("shtrih-masterclass-cursor-v1");
+                        localStorage.removeItem("shtrih-masterclass-cursor-v2");
+                        localStorage.removeItem(
+                          "gramilya-animation-progress-v1",
+                        );
                         setDrawingProgress({});
                       }
                     }}
@@ -1075,7 +1178,7 @@ function App() {
                 <h2>Нарисуй этого кибер-волка</h2>
                 <p>
                   Полный разбор существующего босса: от пропорций до меха,
-                  механической руки, одежды и финального цвета. Двенадцать
+                  механической руки, одежды и финального цвета. Тридцать шесть
                   рисованных этапов и конкретные действия на планшете.
                 </p>
                 <div className="link-row">
@@ -1107,7 +1210,7 @@ function App() {
               <section className="info-panel alternate-hero">
                 <div>
                   <span className="eyebrow">
-                    ОТДЕЛЬНЫЙ КОНЦЕПТ · ГЛАВНЫЙ ГЕРОЙ 2.0
+                    ОТДЕЛЬНЫЙ КОНЦЕПТ · ГОРОДСКОЙ РАЗВЕДЧИК
                   </span>
                   <h2>
                     Больше характера.
@@ -1115,14 +1218,15 @@ function App() {
                     Всё ещё твой утёнок.
                   </h2>
                   <p>
-                    Новый вариант главного героя: выразительный силуэт, сложная
-                    механика и уверенная поза. Основной мастер-класс остаётся по
+                    Самостоятельный образ: индиговая куртка, бирюзовый шарф,
+                    компактный протез и лёгкая обувь. Подвижный городской
+                    разведчик с собственным силуэтом. Основной урок остаётся по
                     исходному герою.
                   </p>
                   <a
                     className="secondary"
-                    href="/assets/duck-hero-v2.png"
-                    download="duck-hero-v2.png"
+                    href="/assets/duck-hero-v3.png"
+                    download="duck-hero-v3.png"
                   >
                     Скачать новый концепт <Download size={17} />
                   </a>
@@ -1131,7 +1235,7 @@ function App() {
                   </p>
                 </div>
                 <img
-                  src="/assets/duck-hero-v2.png"
+                  src="/assets/duck-hero-v3.png"
                   alt="Новый концепт главного героя: харизматичный кибер-утёнок"
                   loading="lazy"
                 />
@@ -1139,7 +1243,7 @@ function App() {
             </>
           )}
           <footer>
-            <span className="footer-brand">штрих.</span>
+            <span className="footer-brand">GRAMILYA</span>
             <span>Рисуй в своём темпе. Возвращайся, когда захочешь.</span>
             <button onClick={() => go("tools")}>
               Настройки и прогресс <ArrowUpRight size={14} />

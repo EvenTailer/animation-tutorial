@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -13,8 +13,18 @@ import {
 import { masterclasses } from "./data/masterclasses";
 import "./masterclass.css";
 
-const PROGRESS_KEY = "shtrih-masterclass-progress-v1";
-const CURSOR_KEY = "shtrih-masterclass-cursor-v1";
+const PROGRESS_KEY = "shtrih-masterclass-progress-v2";
+const CURSOR_KEY = "shtrih-masterclass-cursor-v2";
+function hasEarlierRoute() {
+  try {
+    return (
+      !!localStorage.getItem("shtrih-masterclass-progress-v1") ||
+      !!localStorage.getItem("shtrih-masterclass-cursor-v1")
+    );
+  } catch {
+    return false;
+  }
+}
 function readProgress() {
   try {
     const value = JSON.parse(localStorage.getItem(PROGRESS_KEY));
@@ -48,6 +58,7 @@ function saveCursor(id, index) {
       CURSOR_KEY,
       JSON.stringify({ ...readCursor(), [id]: index }),
     );
+    window.dispatchEvent(new Event("shtrih-masterclass-cursor-change"));
   } catch {
     /* The drawing walkthrough remains usable without browser storage. */
   }
@@ -75,7 +86,10 @@ function Illustration({
   const col = step.panel % step.columns,
     row = Math.floor(step.panel / step.columns);
   return (
-    <div className="mc-illustration-scroll">
+    <div
+      className="mc-illustration-scroll"
+      style={{ "--mc-cell-aspect": aspect }}
+    >
       <div
         className="mc-illustration-scale"
         style={{ width: `${zoom * 100}%` }}
@@ -118,10 +132,14 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
     [progress, setProgress] = useState(readProgress),
     [saveError, setSaveError] = useState(false),
     [zoomOpen, setZoomOpen] = useState(false),
-    [zoom, setZoom] = useState(1);
+    [zoom, setZoom] = useState(1),
+    [earlierRoute] = useState(hasEarlierRoute);
   const dialog = useRef(null),
     expandButton = useRef(null),
-    stepHeading = useRef(null);
+    stepHeading = useRef(null),
+    stageStrip = useRef(null),
+    workspace = useRef(null),
+    viewportSnapshot = useRef(null);
   const course =
       masterclasses.find((c) => c.id === character) || masterclasses[0],
     steps = course.chapters.flatMap((ch) =>
@@ -141,6 +159,29 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
     }
     window.dispatchEvent(new Event("shtrih-progress-change"));
   }, [progress]);
+  useLayoutEffect(() => {
+    resetReadingPanes();
+  }, [character, index]);
+  useLayoutEffect(() => {
+    const strip = stageStrip.current;
+    const active = strip?.querySelector('[aria-current="step"]');
+    if (strip && active) {
+      const left = active.offsetLeft;
+      if (left < strip.scrollLeft) strip.scrollLeft = left;
+      else if (left + active.offsetWidth > strip.scrollLeft + strip.clientWidth)
+        strip.scrollLeft = left + active.offsetWidth - strip.clientWidth;
+    }
+    const position = viewportSnapshot.current;
+    if (position && !zoomOpen) {
+      if (window.scrollY !== position.y || window.scrollX !== position.x)
+        window.scrollTo({
+          left: position.x,
+          top: position.y,
+          behavior: "instant",
+        });
+      viewportSnapshot.current = null;
+    }
+  }, [character, index, showReference, zoomOpen]);
   useEffect(() => {
     const nextIndex = courseIndex(
       initialId,
@@ -161,10 +202,29 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
     return () => {
       el?.close();
       document.body.style.overflow = oldOverflow;
-      expandButton.current?.focus();
+      expandButton.current?.focus({ preventScroll: true });
     };
   }, [zoomOpen]);
+  function keepViewport() {
+    if (zoomOpen) return;
+    viewportSnapshot.current = { x: window.scrollX, y: window.scrollY };
+    if (workspace.current && window.matchMedia("(max-width: 950px)").matches)
+      workspace.current.style.minHeight = `${workspace.current.getBoundingClientRect().height}px`;
+  }
+  function resetReadingPanes() {
+    if (!window.matchMedia("(min-width: 951px)").matches) return;
+    workspace.current
+      ?.querySelectorAll(
+        ".mc-art-panel, .mc-step-content, .mc-illustration-scroll",
+      )
+      .forEach((pane) => {
+        pane.scrollTop = 0;
+        pane.scrollLeft = 0;
+      });
+  }
   function choose(id) {
+    keepViewport();
+    resetReadingPanes();
     const nextIndex = courseIndex(id, readCursor()[id]);
     saveCursor(character, index);
     setCharacter(id);
@@ -175,19 +235,14 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
     setZoom(1);
   }
   function navigate(next) {
+    keepViewport();
+    resetReadingPanes();
     const nextIndex = courseIndex(course.id, next);
     setIndex(nextIndex);
     saveCursor(course.id, nextIndex);
     setShowReference(false);
     setDialogReference(false);
     setZoom(1);
-    if (!zoomOpen)
-      requestAnimationFrame(() => {
-        stepHeading.current
-          ?.closest(".mc-workspace")
-          ?.scrollIntoView({ block: "start", behavior: "instant" });
-        stepHeading.current?.focus({ preventScroll: true });
-      });
   }
   function openZoom(reference = false) {
     setDialogReference(reference);
@@ -253,8 +308,9 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
               <strong>{c.title}</strong>
               <small>
                 {c.id === "duck"
-                  ? "Основной персонаж · 18 этапов"
-                  : "Дополнительная практика · 12 этапов"}
+                  ? "Основной персонаж"
+                  : "Дополнительная практика"}
+                {` · ${c.chapters.reduce((n, ch) => n + ch.steps.length, 0)} шагов`}
               </small>
             </span>
             {character === c.id && <Check size={19} />}
@@ -271,6 +327,12 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
           <Download size={17} /> Скачать оригинал героя
         </a>
       </div>
+      {earlierRoute && (
+        <p className="mc-route-update">
+          Обновлённый маршрут: одно действие за шаг. Старые упражнения сохранены
+          в браузере; новые шаги отмечаются отдельно.
+        </p>
+      )}
       <details className="mc-preparation">
         <summary>
           <Layers size={18} /> Подготовь холст и слои{" "}
@@ -315,23 +377,30 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
           <i style={{ width: `${(completed / steps.length) * 100}%` }} />
         </div>
       </div>
-      <div className="mc-stage-picker">
-        <label>
-          Раздел
-          <select
-            value={step.chapterId}
-            onChange={(e) =>
-              navigate(steps.findIndex((s) => s.chapterId === e.target.value))
-            }
-          >
-            {course.chapters.map((ch) => (
-              <option key={ch.id} value={ch.id}>
-                {ch.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="mc-stage-buttons" aria-label="Все этапы">
+      <div className="mc-stage-toolbar" aria-label="Навигация по шагам">
+        <div className="mc-toolbar-top">
+          <label>
+            Раздел
+            <select
+              value={step.chapterId}
+              onChange={(e) =>
+                navigate(steps.findIndex((s) => s.chapterId === e.target.value))
+              }
+            >
+              {course.chapters.map((ch) => (
+                <option key={ch.id} value={ch.id}>
+                  {ch.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          {navigation}
+        </div>
+        <div
+          className="mc-stage-strip"
+          ref={stageStrip}
+          aria-label="Все шаги — прокрути ленту вбок"
+        >
           {steps.map((s, i) => (
             <button
               key={s.id}
@@ -341,13 +410,29 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
               className={index === i ? "current" : ""}
               onClick={() => navigate(i)}
             >
-              {progress[`${course.id}:${s.id}`] ? <Check size={15} /> : i + 1}
+              <span>{i + 1}</span>
+              {progress[`${course.id}:${s.id}`] && (
+                <Check size={10} className="mc-stage-done" />
+              )}
             </button>
           ))}
         </div>
+        <p
+          className="mc-current-stage"
+          aria-live="polite"
+          aria-atomic="true"
+          title={`Шаг ${index + 1}. ${step.title}`}
+        >
+          <span>Шаг {index + 1}.</span> {step.title}
+        </p>
       </div>
-      <div className="mc-workspace">
-        <div className="mc-art-panel">
+      <div className="mc-workspace" ref={workspace}>
+        <div
+          className="mc-art-panel"
+          tabIndex={0}
+          role="region"
+          aria-label="Иллюстрация шага и оригинал героя"
+        >
           <div className="mc-art-label">
             <span>
               {showReference
@@ -368,6 +453,9 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
             reference={course.reference}
             showReference={showReference}
           />
+          {step.focusTitle && (
+            <p className="mc-focus-title">{step.focusTitle}</p>
+          )}
           <div className="mc-art-actions">
             <button
               className="secondary"
@@ -410,7 +498,12 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
             ориентир для пропорций, одежды и деталей.
           </p>
         </div>
-        <div className="mc-step-content">
+        <div
+          className="mc-step-content"
+          tabIndex={0}
+          role="region"
+          aria-label="Описание действия и самопроверка"
+        >
           <span className="eyebrow">
             {step.chapterTitle} · ЭТАП {index + 1}
           </span>
@@ -428,7 +521,7 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
               <dd>{step.layer}</dd>
             </div>
           </dl>
-          <h3>Что делать на планшете</h3>
+          <h3>Одно действие на планшете</h3>
           <ol className="mc-actions">
             {step.actions.map((action, i) => (
               <li key={i}>
