@@ -1,4 +1,13 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  useAppDispatch,
+  useAppSelector,
+  selectProgress,
+  selectPersistenceError,
+  toggleDrawingStep,
+  setDrawingCursor,
+} from "./store";
 import {
   ArrowLeft,
   ArrowRight,
@@ -13,55 +22,12 @@ import {
 import { masterclasses } from "./data/masterclasses";
 import "./masterclass.css";
 
-const PROGRESS_KEY = "shtrih-masterclass-progress-v2";
-const CURSOR_KEY = "shtrih-masterclass-cursor-v2";
-function hasEarlierRoute() {
-  try {
-    return (
-      !!localStorage.getItem("shtrih-masterclass-progress-v1") ||
-      !!localStorage.getItem("shtrih-masterclass-cursor-v1")
-    );
-  } catch {
-    return false;
-  }
-}
-function readProgress() {
-  try {
-    const value = JSON.parse(localStorage.getItem(PROGRESS_KEY));
-    return value && typeof value === "object" && !Array.isArray(value)
-      ? value
-      : {};
-  } catch {
-    return {};
-  }
-}
-function readCursor() {
-  try {
-    const value = JSON.parse(localStorage.getItem(CURSOR_KEY));
-    return value && typeof value === "object" && !Array.isArray(value)
-      ? value
-      : {};
-  } catch {
-    return {};
-  }
-}
 function courseIndex(id, value) {
   const c = masterclasses.find((c) => c.id === id) || masterclasses[0];
   const last = c.chapters.reduce((n, ch) => n + ch.steps.length, 0) - 1;
   return typeof value === "number" && Number.isFinite(value)
     ? Math.max(0, Math.min(last, Math.floor(value)))
     : 0;
-}
-function saveCursor(id, index) {
-  try {
-    localStorage.setItem(
-      CURSOR_KEY,
-      JSON.stringify({ ...readCursor(), [id]: index }),
-    );
-    window.dispatchEvent(new Event("shtrih-masterclass-cursor-change"));
-  } catch {
-    /* The drawing walkthrough remains usable without browser storage. */
-  }
 }
 function Illustration({
   step,
@@ -118,47 +84,54 @@ function Illustration({
   );
 }
 
-export default function Masterclass({ initial = "duck", startAt = null }) {
-  const requestedId = initial === "wolf" ? "boss" : initial,
-    initialId = masterclasses.some((c) => c.id === requestedId)
-      ? requestedId
-      : masterclasses[0].id;
-  const [character, setCharacter] = useState(initialId),
-    [index, setIndex] = useState(() =>
-      courseIndex(initialId, startAt ?? readCursor()[initialId]),
-    ),
-    [showReference, setShowReference] = useState(false),
+export default function Masterclass() {
+  const params = useParams(),
+    routerNavigate = useNavigate(),
+    dispatch = useAppDispatch();
+  const savedProgress = useAppSelector(selectProgress),
+    saveError = useAppSelector(selectPersistenceError);
+  const progress = savedProgress.drawing,
+    cursors = savedProgress.cursors;
+  const earlierRoute = Object.keys(savedProgress.legacyDrawing).length > 0;
+  const character = masterclasses.some((c) => c.id === params.character)
+    ? params.character
+    : masterclasses[0].id;
+  const course = masterclasses.find((c) => c.id === character);
+  const steps = course.chapters.flatMap((ch) =>
+    ch.steps.map((s) => ({ ...s, chapterId: ch.id, chapterTitle: ch.title })),
+  );
+  const routeStep = Number(params.step);
+  const validStep =
+    params.character === character &&
+    /^[1-9]\d*$/.test(params.step || "") &&
+    Number.isSafeInteger(routeStep) &&
+    routeStep <= steps.length;
+  const index = validStep ? routeStep - 1 : 0;
+  const step = steps[index];
+  const [showReference, setShowReference] = useState(false),
     [dialogReference, setDialogReference] = useState(false),
-    [progress, setProgress] = useState(readProgress),
-    [saveError, setSaveError] = useState(false),
     [zoomOpen, setZoomOpen] = useState(false),
-    [zoom, setZoom] = useState(1),
-    [earlierRoute] = useState(hasEarlierRoute);
+    [zoom, setZoom] = useState(1);
   const dialog = useRef(null),
     expandButton = useRef(null),
     stepHeading = useRef(null),
     stageStrip = useRef(null),
     workspace = useRef(null),
     viewportSnapshot = useRef(null);
-  const course =
-      masterclasses.find((c) => c.id === character) || masterclasses[0],
-    steps = course.chapters.flatMap((ch) =>
-      ch.steps.map((s) => ({ ...s, chapterId: ch.id, chapterTitle: ch.title })),
-    ),
-    step = steps[Math.min(index, steps.length - 1)];
   const completed = steps.filter(
       (s) => progress[`${course.id}:${s.id}`],
     ).length,
     isDone = !!progress[`${course.id}:${step.id}`];
   useEffect(() => {
-    try {
-      localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
-      setSaveError(false);
-    } catch {
-      setSaveError(true);
-    }
-    window.dispatchEvent(new Event("shtrih-progress-change"));
-  }, [progress]);
+    if (!validStep)
+      routerNavigate(`/draw/${character}/1`, {
+        replace: true,
+        preventScrollReset: true,
+      });
+  }, [validStep, character, routerNavigate]);
+  useEffect(() => {
+    if (validStep) dispatch(setDrawingCursor({ character, index }));
+  }, [character, index, validStep, dispatch]);
   useLayoutEffect(() => {
     resetReadingPanes();
   }, [character, index]);
@@ -183,16 +156,10 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
     }
   }, [character, index, showReference, zoomOpen]);
   useEffect(() => {
-    const nextIndex = courseIndex(
-      initialId,
-      startAt ?? readCursor()[initialId],
-    );
-    setCharacter(initialId);
-    setIndex(nextIndex);
-    saveCursor(initialId, nextIndex);
     setShowReference(false);
     setDialogReference(false);
-  }, [initialId, startAt]);
+    setZoom(1);
+  }, [character, index]);
   useEffect(() => {
     if (!zoomOpen) return;
     const el = dialog.current;
@@ -225,11 +192,10 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
   function choose(id) {
     keepViewport();
     resetReadingPanes();
-    const nextIndex = courseIndex(id, readCursor()[id]);
-    saveCursor(character, index);
-    setCharacter(id);
-    setIndex(nextIndex);
-    saveCursor(id, nextIndex);
+    const nextIndex = courseIndex(id, cursors[id]);
+    routerNavigate(`/draw/${id}/${nextIndex + 1}`, {
+      preventScrollReset: true,
+    });
     setShowReference(false);
     setDialogReference(false);
     setZoom(1);
@@ -238,8 +204,9 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
     keepViewport();
     resetReadingPanes();
     const nextIndex = courseIndex(course.id, next);
-    setIndex(nextIndex);
-    saveCursor(course.id, nextIndex);
+    routerNavigate(`/draw/${course.id}/${nextIndex + 1}`, {
+      preventScrollReset: true,
+    });
     setShowReference(false);
     setDialogReference(false);
     setZoom(1);
@@ -250,8 +217,7 @@ export default function Masterclass({ initial = "duck", startAt = null }) {
     setZoom(1);
   }
   function mark() {
-    const key = `${course.id}:${step.id}`;
-    setProgress((p) => ({ ...p, [key]: !p[key] }));
+    dispatch(toggleDrawingStep({ character: course.id, stepId: step.id }));
   }
   const navigation = (
     <div className="mc-navigation">

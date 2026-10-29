@@ -1488,3 +1488,7 @@ main > h1 {
     grid-column: 1;
   }
 }
+:where(.brand, .nav-item) {
+  text-decoration: none;
+  color: inherit;
+}

@@ -1,4 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  useAppDispatch,
+  useAppSelector,
+  selectProgress,
+  selectPersistenceError,
+  toggleAnimationFrame,
+} from "./store";
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,55 +28,75 @@ const names = {
   jump: "Прыжок",
   hit: "Удар",
 };
-const progressKey = "gramilya-animation-progress-v1";
-function readProgress() {
-  try {
-    const p = JSON.parse(localStorage.getItem(progressKey));
-    return p && typeof p === "object" && !Array.isArray(p) ? p : {};
-  } catch {
-    return {};
-  }
-}
-export default function AnimationStudio({ initial = "idle" }) {
-  const [type, setType] = useState(
-      Object.hasOwn(names, initial) ? initial : "idle",
-    ),
-    [frame, setFrame] = useState(0),
+export default function AnimationStudio() {
+  const params = useParams(),
+    routerNavigate = useNavigate(),
+    location = useLocation(),
+    dispatch = useAppDispatch();
+  const type = Object.hasOwn(names, params.type) ? params.type : "idle";
+  const routeFrameNumber = Number(params.frame);
+  const validFrame =
+    params.type === type &&
+    /^[1-9]\d*$/.test(params.frame || "") &&
+    Number.isSafeInteger(routeFrameNumber) &&
+    routeFrameNumber <= animationFrames[type].length;
+  const routeFrame = validFrame ? routeFrameNumber - 1 : 0;
+  const done = useAppSelector(selectProgress).animation;
+  const storageError = useAppSelector(selectPersistenceError);
+  const [playbackFrame, setPlaybackFrame] = useState(routeFrame),
     [playing, setPlaying] = useState(false),
     [ghost, setGhost] = useState(false),
-    [speed, setSpeed] = useState(1),
-    [done, setDone] = useState(readProgress),
-    [storageError, setStorageError] = useState(false);
+    [speed, setSpeed] = useState(1);
+  const playbackLocation = useRef(location.key);
+  const playbackActive = playing && playbackLocation.current === location.key;
+  const frame = playbackActive ? playbackFrame : routeFrame;
   const frames = animationFrames[type],
     lesson = animationLessons[type][frame],
     durations = animationDurations[type],
     key = `${type}:${frame}`,
     complete = frames.filter((_, i) => done[`${type}:${i}`]).length;
   useEffect(() => {
-    if (!playing) return;
+    if (!validFrame)
+      routerNavigate(`/animation/${type}/1`, {
+        replace: true,
+        preventScrollReset: true,
+      });
+  }, [validFrame, type, routerNavigate]);
+  useEffect(() => {
+    setPlaying(false);
+    setPlaybackFrame(routeFrame);
+  }, [type, routeFrame, location.key]);
+  useEffect(() => {
+    if (!playbackActive) return;
     const timer = setTimeout(
-      () => setFrame((f) => (f + 1) % frames.length),
-      durations[frame] / speed,
+      () => setPlaybackFrame((f) => (f + 1) % frames.length),
+      durations[playbackFrame] / speed,
     );
     return () => clearTimeout(timer);
-  }, [playing, frame, type, speed]);
-  useEffect(() => {
-    try {
-      localStorage.setItem(progressKey, JSON.stringify(done));
-      setStorageError(false);
-    } catch {
-      setStorageError(true);
-    }
-    window.dispatchEvent(new Event("shtrih-progress-change"));
-  }, [done]);
+  }, [playbackActive, playbackFrame, type, speed, frames.length, durations]);
   function selectFrame(i) {
     setPlaying(false);
-    setFrame((i + frames.length) % frames.length);
+    const next = (i + frames.length) % frames.length;
+    routerNavigate(`/animation/${type}/${next + 1}`, {
+      preventScrollReset: true,
+    });
   }
   function selectType(t) {
     setPlaying(false);
-    setType(t);
-    setFrame(0);
+    routerNavigate(`/animation/${t}/1`, { preventScrollReset: true });
+  }
+  function togglePlayback() {
+    if (playing) {
+      setPlaying(false);
+      routerNavigate(`/animation/${type}/${playbackFrame + 1}`, {
+        replace: true,
+        preventScrollReset: true,
+      });
+    } else {
+      playbackLocation.current = location.key;
+      setPlaybackFrame(routeFrame);
+      setPlaying(true);
+    }
   }
   return (
     <section className="animation-studio">
@@ -147,7 +175,7 @@ export default function AnimationStudio({ initial = "idle" }) {
       <div className="as-workspace">
         <div className="as-player">
           <div className="as-controls">
-            <button className="primary" onClick={() => setPlaying((p) => !p)}>
+            <button className="primary" onClick={togglePlayback}>
               {playing ? <Pause size={17} /> : <Play size={17} />}{" "}
               {playing ? "Пауза" : "Смотреть движение"}
             </button>
@@ -222,7 +250,7 @@ export default function AnimationStudio({ initial = "idle" }) {
           <button
             className={done[key] ? "primary completed" : "primary"}
             aria-pressed={!!done[key]}
-            onClick={() => setDone((d) => ({ ...d, [key]: !d[key] }))}
+            onClick={() => dispatch(toggleAnimationFrame({ type, frame }))}
           >
             <Check size={18} />
             {done[key]
