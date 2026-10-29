@@ -1,0 +1,132 @@
+.hero-foundations {
+  display: flex;
+  margin-top: 9px;
+  color: var(--muted);
+}
+.drawing-path {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 27px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 8px;
+  margin-bottom: 25px;
+}
+.drawing-path h2 {
+  font-size: 26px;
+  margin: 10px 0;
+}
+.drawing-path p {
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 680px;
+  margin: 0;
+}
+.drawing-path > .secondary {
+  flex-shrink: 0;
+}
+.masterclass-app {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0 0 25px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 30px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.masterclass-app select {
+  max-width: 330px;
+}
+.drawing-support {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 25px;
+  background: var(--sub);
+  border-radius: 8px;
+  margin-top: 35px;
+}
+.drawing-support > svg {
+  flex-shrink: 0;
+}
+.drawing-support h3 {
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+.drawing-support p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+.drawing-support > .secondary {
+  flex-shrink: 0;
+}
+.week-reference {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #f5f1e7;
+}
+.alternate-hero {
+  display: grid;
+  grid-template-columns: 1fr 0.8fr;
+  gap: 30px;
+  align-items: center;
+}
+.alternate-hero img {
+  display: block;
+  width: 100%;
+  max-height: 560px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+@media (max-width: 1100px) {
+  .drawing-path {
+    align-items: start;
+    flex-direction: column;
+  }
+  .drawing-support {
+    flex-wrap: wrap;
+  }
+  .drawing-support > div {
+    flex: 1;
+  }
+  .alternate-hero {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .drawing-path {
+    padding: 22px;
+  }
+  .drawing-path h2 {
+    font-size: 25px;
+  }
+  .drawing-support {
+    padding: 20px;
+  }
+  .drawing-support > .secondary {
+    width: 100%;
+  }
+  .masterclass-app {
+    gap: 9px;
+  }
+  .masterclass-app select {
+    width: 100%;
+    max-width: 100%;
+  }
+  .hero-foundations {
+    font-size: 11px;
+  }
+}
+.week-process-cell {
+  height: 100%;
+  aspect-ratio: 1;
+  margin: auto;
+  background-repeat: no-repeat;
+}
