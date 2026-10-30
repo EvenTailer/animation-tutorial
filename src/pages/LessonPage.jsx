@@ -75,7 +75,7 @@ function LessonContent({ lesson }) {
       <div className="lesson-head">
         <div>
           <span className="eyebrow">
-            НЕДЕЛЯ {week.id} · {week.title}
+            ОСНОВЫ И ПРАКТИКА · БЛОК {week.id} · {week.title}
           </span>
           <h1>{lesson.title}</h1>
           <p>
@@ -89,7 +89,7 @@ function LessonContent({ lesson }) {
           onChange={(e) => open(e.target.value)}
         >
           {weeks.map((w) => (
-            <optgroup key={w.id} label={`Неделя ${w.id} · ${w.title}`}>
+            <optgroup key={w.id} label={`Практика ${w.id} · ${w.title}`}>
               {w.lessons.map((l) => (
                 <option key={l.id} value={l.id}>
                   {done.includes(l.id) ? "✓ " : ""}
@@ -100,6 +100,13 @@ function LessonContent({ lesson }) {
           ))}
         </select>
       </div>
+      <p className="intro">
+        Это дополнительные упражнения на отдельные навыки, а не недели основного
+        маршрута. Можно выбрать любое или вернуться к своему рисунку героя.{" "}
+        <button className="text-button" onClick={() => navigate("/draw")}>
+          Продолжить рисунок героя <ArrowRight size={15} />
+        </button>
+      </p>
       <div className="lesson-layout">
         <div>
           <div className="lesson-canvas">

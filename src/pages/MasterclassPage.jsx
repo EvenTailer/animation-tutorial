@@ -30,7 +30,7 @@ export default function MasterclassPage() {
           ))}
         </select>
         <button className="text-button" onClick={() => navigate("/tools")}>
-          Как настроить программу <ArrowUpRight size={14} />
+          Настройка и бесплатный вариант <ArrowUpRight size={14} />
         </button>
       </div>
       <Masterclass />

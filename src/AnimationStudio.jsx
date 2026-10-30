@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   useAppDispatch,
   useAppSelector,
   selectProgress,
   selectPersistenceError,
+  selectSettings,
+  setDevice,
   toggleAnimationFrame,
 } from "./store";
 import {
@@ -22,6 +24,7 @@ import CharacterAnimation, {
   animationDurations,
 } from "./CharacterAnimation";
 import "./animation-studio.css";
+import { apps } from "./data/apps.js";
 const names = {
   idle: "Живое ожидание",
   run: "Бег",
@@ -42,6 +45,8 @@ export default function AnimationStudio() {
     routeFrameNumber <= animationFrames[type].length;
   const routeFrame = validFrame ? routeFrameNumber - 1 : 0;
   const done = useAppSelector(selectProgress).animation;
+  const { device } = useAppSelector(selectSettings);
+  const app = apps.find((a) => a.id === device) || apps[0];
   const storageError = useAppSelector(selectPersistenceError);
   const [playbackFrame, setPlaybackFrame] = useState(routeFrame),
     [playing, setPlaying] = useState(false),
@@ -111,6 +116,11 @@ export default function AnimationStudio() {
         повтори её на планшете. Рисунок из мастер-класса станет моделью для
         лица, одежды и материалов.
       </p>
+      <p className="caption">
+        Здесь ты рассматриваешь примеры, а рисуешь и сохраняешь свою анимацию в
+        приложении на планшете. Для первого опыта удобнее начать с четырёх поз{" "}
+        <Link to="/animation/idle/1">живого ожидания</Link>.
+      </p>
       <div className="as-tabs" role="group" aria-label="Выбрать движение">
         {Object.entries(names).map(([id, label]) => (
           <button
@@ -128,19 +138,38 @@ export default function AnimationStudio() {
         <summary>
           <Layers size={18} /> Подготовь анимационный документ
         </summary>
+        <label className="app-inline">
+          Моя программа
+          <select
+            aria-label="Программа для анимации"
+            value={device}
+            onChange={(e) => dispatch(setDevice(e.target.value))}
+          >
+            {apps.map((a) => (
+              <option value={a.id} key={a.id}>
+                {a.device} · {a.name}
+              </option>
+            ))}
+          </select>
+        </label>
         <p>
-          Сохрани копию законченного героя. Создай отдельный проект анимации:
-          одинаковый размер холста и прозрачный фон у всех кадров. На служебном
-          слое проведи линию земли. Создай папку первого кадра и перенеси в неё
-          рисунок героя. Для следующего кадра нужна новая папка или ячейка
-          анимации.
+          <strong>В {app.name}:</strong> {app.animationStart}
         </p>
         <p>
-          Включи onion skin — полупрозрачный предыдущий кадр. Если приложение не
-          поддерживает анимацию, рисуй позы в отдельных группах и собери
-          движение на ПК. Сначала проверь позы, сохраняя голову, протез, майку и
-          обувь. Затем переходи к чистовому контуру и цвету.
+          Кадр — один рисунок целого героя; группа — несколько слоёв, собранных
+          вместе. Timeline — лента, которая задаёт порядок рисунков. Калька
+          (onion skin) — бледный предыдущий рисунок под текущим: она помогает
+          сохранить размеры и положение. Если кальки нет, уменьши непрозрачность
+          предыдущего слоя до 15–25%.
         </p>
+        <p>
+          Не меняй размер холста между позами и не обрезай пустые края. Линию
+          земли держи на неподвижном служебном слое. Включай прозрачный фон у
+          копии для экспорта, сохраняя исходник со слоями.
+        </p>
+        <a href={app.help} target="_blank" rel="noreferrer">
+          Руководство {app.name} по анимации и сохранению ↗
+        </a>
       </details>
       <div className="as-toolbar" aria-label="Кадры движения">
         <button
@@ -220,8 +249,11 @@ export default function AnimationStudio() {
             href={`/assets/duck-${type}-frames.png`}
             download
           >
-            <Download size={15} /> Скачать лист поз
+            <Download size={15} /> Скачать образец поз (PNG)
           </a>
+          <p className="caption">
+            Это учебный образец, не экспорт твоего рисунка.
+          </p>
         </div>
         <div className="as-instruction">
           <span className="eyebrow">
@@ -269,9 +301,13 @@ export default function AnimationStudio() {
         <p>
           Прокрути их вручную и найди резкие скачки. Между двумя слишком разными
           позами добавь промежуточный рисунок. На отдельной копии обведи чистый
-          контур, затем верни цвета героя. Экспортируй GIF для проверки и
-          PNG-кадры с одинаковым холстом для работы на ПК.
+          контур, затем верни цвета героя. В своей программе на планшете
+          экспортируй GIF для проверки и PNG-кадры с одинаковым холстом для
+          работы на ПК. Сайт не получает твой проект и не экспортирует его.
         </p>
+        <h3>Сохранить свою работу в {app.name}</h3>
+        <p>{app.export}</p>
+        <Link to="/tools">Настройки программ и резервная копия отметок</Link>
         <p>
           Растровые позы созданы с помощью ИИ по исходному персонажу. Изучай
           движение по ним, а точные детали модели сверяй с исходным листом.

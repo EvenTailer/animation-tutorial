@@ -1,0 +1,54 @@
+.beginner-setup {
+  padding: 16px 0;
+}
+.beginner-setup h3 {
+  font-size: 16px;
+  margin: 0 0 12px;
+}
+.beginner-setup ol {
+  padding-left: 22px;
+  display: grid;
+  gap: 12px;
+}
+.beginner-setup li,
+.beginner-setup p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.beginner-setup strong {
+  color: var(--ink);
+}
+.head-placement {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 16px 0;
+  padding: 16px;
+  background: var(--sub);
+  border-radius: 7px;
+}
+.head-placement svg {
+  width: 104px;
+  height: auto;
+  flex: 0 0 104px;
+}
+.head-placement figcaption {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.head-placement strong {
+  color: var(--ink);
+  display: block;
+}
+@media (max-width: 600px) {
+  .head-placement {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .head-placement svg {
+    width: 76px;
+    flex-basis: 76px;
+  }
+}

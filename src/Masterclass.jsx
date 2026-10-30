@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { masterclasses } from "./data/masterclasses";
 import "./masterclass.css";
+import BeginnerSetup, { HeadPlacement } from "./BeginnerSetup";
 
 function courseIndex(id, value) {
   const c = masterclasses.find((c) => c.id === id) || masterclasses[0];
@@ -108,6 +109,7 @@ export default function Masterclass() {
     routeStep <= steps.length;
   const index = validStep ? routeStep - 1 : 0;
   const step = steps[index];
+  const [preparationOpen, setPreparationOpen] = useState(index === 0);
   const [showReference, setShowReference] = useState(false),
     [dialogReference, setDialogReference] = useState(false),
     [zoomOpen, setZoomOpen] = useState(false),
@@ -299,31 +301,39 @@ export default function Masterclass() {
           в браузере; новые шаги отмечаются отдельно.
         </p>
       )}
-      <details className="mc-preparation">
+      <details
+        className="mc-preparation"
+        open={preparationOpen}
+        onToggle={(event) => setPreparationOpen(event.currentTarget.open)}
+      >
         <summary>
           <Layers size={18} /> Подготовь холст и слои{" "}
-          <span>Открыть памятку</span>
+          <span>Показать / скрыть</span>
         </summary>
         <div className="mc-preparation-content">
-          <p>{course.canvas}</p>
-          <ul>
-            {course.layers.map((l, i) => (
-              <li key={i}>{l}</li>
-            ))}
-          </ul>
-          <div className="mc-palette">
-            {course.palette.map((color) => (
-              <span key={color.hex}>
-                <i style={{ background: color.hex }} />
-                <b>{color.name}</b>
-                <small>{color.hex}</small>
-              </span>
-            ))}
-          </div>
-          <p className="mc-note">
-            Палитра — опора для старта. Сохраняй исходник со слоями после
-            каждого большого этапа.
-          </p>
+          <BeginnerSetup character={character} />
+          <details>
+            <summary>Полный план рисунка: слои, палитра и ориентиры</summary>
+            <p>{course.canvas}</p>
+            <ul>
+              {course.layers.map((l, i) => (
+                <li key={i}>{l}</li>
+              ))}
+            </ul>
+            <div className="mc-palette">
+              {course.palette.map((color) => (
+                <span key={color.hex}>
+                  <i style={{ background: color.hex }} />
+                  <b>{color.name}</b>
+                  <small>{color.hex}</small>
+                </span>
+              ))}
+            </div>
+            <p className="mc-note">
+              Палитра — опора для старта. Сохраняй исходник со слоями после
+              каждого большого этапа.
+            </p>
+          </details>
         </div>
       </details>
       <div className="mc-progress-row">
@@ -477,6 +487,7 @@ export default function Masterclass() {
             {step.title}
           </h2>
           <p className="mc-goal">{step.goal}</p>
+          {character === "duck" && index === 0 && <HeadPlacement />}
           <dl className="mc-tool-info">
             <div>
               <dt>Инструмент</dt>
