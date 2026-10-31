@@ -465,12 +465,14 @@
   background: #343932;
 }
 .mc-dialog-image .mc-illustration-scale {
+  min-width: 0;
   max-width: none;
 }
 .mc-dialog-image .mc-original {
   min-height: 0;
 }
 .mc-dialog-bottom {
+  flex-wrap: wrap;
   padding: 12px 24px;
   display: flex;
   align-items: center;
@@ -726,8 +728,21 @@
   max-width: none;
 }
 .mc-dialog-image .mc-illustration-scale {
-  margin: 0;
+  margin: auto;
   max-width: none;
+}
+.mc-brush-help {
+  margin: 16px 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px;
+}
+.mc-brush-help > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 32px;
+  align-content: center;
 }
 .mc-dialog-image .mc-raster {
   min-height: 0;

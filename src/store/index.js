@@ -93,6 +93,13 @@ const progressSlice = createSlice({
       if (normalizeProgress({ lessons: [id] }).lessons.length === 1)
         state.lastLesson = id;
     },
+    setLessonCursor(state, action) {
+      const { id, index } = isRecord(action.payload) ? action.payload : {};
+      const valid = normalizeProgress({
+        lessonCursors: { [id]: index },
+      }).lessonCursors;
+      if (Object.hasOwn(valid, id)) state.lessonCursors[id] = index;
+    },
     replaceProgress(_state, action) {
       return normalizeProgress(action.payload);
     },
@@ -121,6 +128,7 @@ export const {
   toggleAnimationFrame,
   toggleAnimationDrawingStep,
   setLastLesson,
+  setLessonCursor,
   replaceProgress,
   resetProgress,
 } = progressSlice.actions;

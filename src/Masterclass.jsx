@@ -37,30 +37,48 @@ function Illustration({
   reference,
   showReference = false,
   zoom = 1,
+  fit = false,
 }) {
   const [aspect, setAspect] = useState(1);
+  const viewport = useRef(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  useLayoutEffect(() => {
+    if (!fit || !viewport.current) return;
+    const observer = new ResizeObserver(([entry]) =>
+      setSize(entry.contentRect),
+    );
+    observer.observe(viewport.current);
+    return () => observer.disconnect();
+  }, [fit]);
   useEffect(() => {
-    if (showReference) return;
     const img = new Image();
     img.onload = () =>
       setAspect(
-        img.naturalWidth / step.columns / (img.naturalHeight / step.rows),
+        showReference
+          ? img.naturalWidth / img.naturalHeight
+          : img.naturalWidth / step.columns / (img.naturalHeight / step.rows),
       );
-    img.src = step.sheet;
+    img.src = showReference ? reference : step.sheet;
     return () => {
       img.onload = null;
     };
-  }, [step.sheet, step.columns, step.rows, showReference]);
+  }, [step.sheet, step.columns, step.rows, showReference, reference]);
   const col = step.panel % step.columns,
     row = Math.floor(step.panel / step.columns);
   return (
     <div
       className="mc-illustration-scroll"
+      ref={viewport}
       style={{ "--mc-cell-aspect": aspect }}
     >
       <div
         className="mc-illustration-scale"
-        style={{ width: `${zoom * 100}%` }}
+        style={{
+          width:
+            fit && size.width
+              ? Math.min(size.width, size.height * aspect) * zoom
+              : `${zoom * 100}%`,
+        }}
       >
         {showReference ? (
           <img
@@ -498,26 +516,15 @@ export default function Masterclass() {
             {step.title}
           </h2>
           <p className="mc-goal">{step.goal}</p>
-          {index === 0 && (
-            <HeadPlacement
-              reference={course.reference}
-              poseGuide={course.poseGuide}
-            />
-          )}
-          <DeviceDrawingGuide
-            key={step.chapterId}
-            technique={
-              step.technique ||
-              (/тень|тен[ьи]|блик|свет|фактур/i.test(step.title)
-                ? "shade"
-                : /залей|цвет|залив/i.test(step.title)
-                  ? "fill"
-                  : /контур|обвед|очист/i.test(step.title)
-                    ? "ink"
-                    : "sketch")
-            }
-            compact
-          />
+          <h3>Одно действие на планшете</h3>
+          <ol className="mc-actions">
+            {step.actions.map((action, i) => (
+              <li key={i}>
+                <span>{i + 1}</span>
+                <p>{action}</p>
+              </li>
+            ))}
+          </ol>
           <dl className="mc-tool-info">
             <div>
               <dt>Инструмент</dt>
@@ -528,15 +535,29 @@ export default function Masterclass() {
               <dd>{step.layer}</dd>
             </div>
           </dl>
-          <h3>Одно действие на планшете</h3>
-          <ol className="mc-actions">
-            {step.actions.map((action, i) => (
-              <li key={i}>
-                <span>{i + 1}</span>
-                <p>{action}</p>
-              </li>
-            ))}
-          </ol>
+          {index === 0 && (
+            <HeadPlacement
+              reference={course.reference}
+              poseGuide={course.poseGuide}
+            />
+          )}
+          <details className="mc-brush-help" key={step.chapterId}>
+            <summary>Кисть и настройки в моей программе</summary>
+            <DeviceDrawingGuide
+              key={step.chapterId}
+              technique={
+                step.technique ||
+                (/тень|тен[ьи]|блик|свет|фактур/i.test(step.title)
+                  ? "shade"
+                  : /залей|цвет|залив/i.test(step.title)
+                    ? "fill"
+                    : /контур|обвед|очист/i.test(step.title)
+                      ? "ink"
+                      : "sketch")
+              }
+              compact
+            />
+          </details>
           <div className="mc-checkpoint">
             <strong>
               <Check size={17} /> Перед следующим этапом
@@ -596,12 +617,13 @@ export default function Masterclass() {
             reference={course.reference}
             showReference={dialogReference}
             zoom={zoom}
+            fit
           />
         </div>
         <div className="mc-dialog-bottom">
           <label className="mc-zoom-control">
             <ZoomIn size={18} />
-            <span>{Math.round(zoom * 100)}%</span>
+            <span>{zoom === 1 ? "Вписано" : `×${zoom.toFixed(2)}`}</span>
             <input
               type="range"
               min="1"
@@ -612,6 +634,17 @@ export default function Masterclass() {
               onChange={(e) => setZoom(Number(e.target.value))}
             />
           </label>
+          <button
+            className="secondary"
+            onClick={() => {
+              setZoom(1);
+              dialog.current
+                ?.querySelector(".mc-illustration-scroll")
+                ?.scrollTo(0, 0);
+            }}
+          >
+            Вписать целиком
+          </button>
           <button
             className="secondary"
             aria-pressed={dialogReference}

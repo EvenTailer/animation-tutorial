@@ -136,6 +136,14 @@ export function normalizeProgress(value, constraints = {}) {
     ],
     drawing: trueMap(input.drawing, isDrawingKey, constraints.drawingKeys),
     cursors,
+    lessonCursors: Object.fromEntries(
+      Object.entries(
+        isRecord(input.lessonCursors) ? input.lessonCursors : {},
+      ).filter(
+        ([id, index]) =>
+          validLesson(id) && Number.isSafeInteger(index) && index >= 0,
+      ),
+    ),
     animation: trueMap(
       sameRevision ? input.animation : {},
       isAnimationKey,

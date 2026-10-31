@@ -113,7 +113,7 @@ export default function CharacterAnimation({
           {selected === "idle"
             ? "Стойка в три четверти"
             : "Боковая плоскость движения"}{" "}
-          · вправо · холст 512 × 600 · общая земля
+          · вправо · документ 1536 × 1800 px · общая земля
         </span>
       </div>
       <div className="character-animation-caption">

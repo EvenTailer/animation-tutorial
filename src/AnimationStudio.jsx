@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -29,6 +29,7 @@ import { exportAnimationAtlas } from "./animationRaster.js";
 import DeviceDrawingGuide from "./DeviceDrawingGuide.jsx";
 import { apps } from "./data/apps.js";
 import "./animation-studio.css";
+import { revealInstruction } from "./revealInstruction.js";
 const names = { idle: "Ожидание", run: "Бег", jump: "Прыжок" };
 export default function AnimationStudio() {
   const params = useParams(),
@@ -57,7 +58,30 @@ export default function AnimationStudio() {
     [exportError, setExportError] = useState("");
   const playbackLocation = useRef(location.key),
     active = playing && playbackLocation.current === location.key,
-    frame = active ? Math.floor(playbackFrame) % frames.length : routeFrame;
+    frame = routeFrame;
+  const instruction = useRef(null),
+    navigation = useRef(null),
+    stepStrip = useRef(null),
+    frameStrip = useRef(null),
+    revealStep = useRef(false);
+  useLayoutEffect(() => {
+    for (const strip of [stepStrip.current, frameStrip.current]) {
+      const selected = strip?.querySelector('[aria-current="step"]');
+      if (strip && selected) {
+        const left = selected.offsetLeft - strip.offsetLeft;
+        if (left < strip.scrollLeft) strip.scrollLeft = left;
+        else if (
+          left + selected.offsetWidth >
+          strip.scrollLeft + strip.clientWidth
+        )
+          strip.scrollLeft = left + selected.offsetWidth - strip.clientWidth;
+      }
+    }
+    if (revealStep.current) {
+      revealStep.current = false;
+      revealInstruction(instruction.current, navigation.current);
+    }
+  }, [step, type, routeFrame, studying]);
   const steps = getAnimationDrawingSteps(type, frame),
     lesson = steps[step],
     key = `${type}:${frame}:${step}`,
@@ -110,6 +134,7 @@ export default function AnimationStudio() {
     return () => cancelAnimationFrame(request);
   }, [active, type, speed, frames.length]);
   function chooseFrame(next) {
+    revealStep.current = true;
     setPlaying(false);
     setStudying(true);
     setStep(0);
@@ -119,6 +144,7 @@ export default function AnimationStudio() {
     );
   }
   function chooseType(next) {
+    revealStep.current = true;
     setPlaying(false);
     setStudying(true);
     setStep(0);
@@ -127,10 +153,7 @@ export default function AnimationStudio() {
   function play() {
     if (playing) {
       setPlaying(false);
-      navigate(`/animation/${type}/${frame + 1}`, {
-        replace: true,
-        preventScrollReset: true,
-      });
+      setStudying(true);
     } else {
       setStudying(false);
       setPlaybackFrame(routeFrame);
@@ -139,6 +162,9 @@ export default function AnimationStudio() {
     }
   }
   function study(next = step) {
+    revealStep.current = true;
+    if (next === step)
+      revealInstruction(instruction.current, navigation.current);
     setPlaying(false);
     setStudying(true);
     setStep(next);
@@ -236,60 +262,79 @@ export default function AnimationStudio() {
           неподвижном слое.
         </p>
       </details>
-      <div className="as-toolbar" aria-label="Кадры движения">
-        <button
-          className="secondary"
-          aria-label="Предыдущая поза"
-          onClick={() => chooseFrame(frame - 1)}
-        >
-          <ArrowLeft size={17} />
-        </button>
-        <div className="as-frame-strip">
-          {frames.map((label, i) => (
-            <button
-              key={i}
-              aria-label={`Кадр ${i + 1}: ${label}`}
-              aria-current={frame === i ? "step" : undefined}
-              className={frame === i ? "selected" : ""}
-              onClick={() => chooseFrame(i)}
+      <div className="as-navigation" ref={navigation}>
+        <div className="as-toolbar" aria-label="Кадры движения">
+          <label className="as-motion-picker">
+            Движение
+            <select
+              aria-label="Выбрать движение"
+              value={type}
+              onChange={(e) => chooseType(e.target.value)}
             >
-              {i + 1}
-              {progress.animation[`${type}:${i}`] && <Check size={10} />}
+              {Object.entries(names).map(([id, name]) => (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            className="secondary"
+            aria-label="Предыдущая поза"
+            onClick={() => chooseFrame(frame - 1)}
+          >
+            <ArrowLeft size={17} />
+          </button>
+          <div className="as-frame-strip" ref={frameStrip}>
+            {frames.map((label, i) => (
+              <button
+                key={i}
+                aria-label={`Кадр ${i + 1}: ${label}`}
+                aria-current={frame === i ? "step" : undefined}
+                className={frame === i ? "selected" : ""}
+                onClick={() => chooseFrame(i)}
+              >
+                {i + 1}
+                {progress.animation[`${type}:${i}`] && <Check size={10} />}
+              </button>
+            ))}
+          </div>
+          <button
+            className="secondary"
+            aria-label="Следующая поза"
+            onClick={() => chooseFrame(frame + 1)}
+          >
+            <ArrowRight size={17} />
+          </button>
+        </div>
+        <div
+          className="as-step-strip"
+          ref={stepStrip}
+          role="group"
+          aria-label="Шаги рисования текущей позы"
+        >
+          {drawingStepNames.map((name, i) => (
+            <button
+              key={name}
+              onClick={() => study(i)}
+              className={studying && step === i ? "selected" : ""}
+              aria-label={`Шаг ${i + 1}: ${name}`}
+              aria-current={studying && step === i ? "step" : undefined}
+            >
+              {i + 1}. {name}
+              {drawn[`${type}:${frame}:${i}`] && <Check size={12} />}
             </button>
           ))}
         </div>
-        <button
-          className="secondary"
-          aria-label="Следующая поза"
-          onClick={() => chooseFrame(frame + 1)}
-        >
-          <ArrowRight size={17} />
-        </button>
-      </div>
-      <div
-        className="as-step-strip"
-        role="group"
-        aria-label="Шаги рисования текущей позы"
-      >
-        {drawingStepNames.map((name, i) => (
-          <button
-            key={name}
-            onClick={() => study(i)}
-            className={studying && step === i ? "selected" : ""}
-            aria-label={`Шаг ${i + 1}: ${name}`}
-            aria-current={studying && step === i ? "step" : undefined}
-          >
-            {i + 1}. {name}
-            {drawn[`${type}:${frame}:${i}`] && <Check size={12} />}
-          </button>
-        ))}
       </div>
       <div className="as-workspace">
         <div className="as-player">
           <div className="as-controls">
             <button className="primary" onClick={play}>
               {playing ? <Pause size={17} /> : <Play size={17} />}{" "}
-              {playing ? "Пауза" : "Смотреть итоговое движение"}
+              {playing
+                ? "Вернуться к своей позе"
+                : "Смотреть итоговое движение"}
             </button>
             <button
               className="secondary"
@@ -349,53 +394,61 @@ export default function AnimationStudio() {
           </p>
         </div>
         <div className="as-instruction">
-          <span className="eyebrow">
-            {names[type]} · ПОЗА {frame + 1}/{frames.length} · ШАГ {step + 1}/12
-          </span>
-          <h2>{lesson.title}</h2>
-          <p className="as-action">{lesson.text}</p>
-          <div className="as-focus">
-            <strong>Перед переходом</strong>
-            <p>{lesson.checkpoint}</p>
+          <div className="as-instruction-heading" ref={instruction}>
+            <span className="eyebrow">
+              {names[type]} · ПОЗА {frame + 1}/{frames.length} · ШАГ {step + 1}
+              /12
+            </span>
+            <h2>{lesson.title}</h2>
+            <p className="as-action">{lesson.text}</p>
           </div>
-          <div className="as-check">
-            <h3>Частая ошибка</h3>
-            <p>{lesson.mistake}</p>
-          </div>
-          <DeviceDrawingGuide technique={lesson.technique} compact />
-          <button
-            className={drawn[key] ? "primary completed" : "primary"}
-            aria-pressed={!!drawn[key]}
-            onClick={() =>
-              dispatch(toggleAnimationDrawingStep({ type, frame, step }))
-            }
-          >
-            <Check size={17} />
-            {drawn[key]
-              ? "Этот шаг нарисован · снять отметку"
-              : "Я нарисовал этот шаг"}
-          </button>
-          <p className="caption">
-            В этой позе выполнено {stepCount}/12 шагов. Полностью построено{" "}
-            {phaseComplete}/{frames.length} поз.
-          </p>
-          <div className="as-study-nav">
+          <div className="as-instruction-details">
+            <div className="as-focus">
+              <strong>Перед переходом</strong>
+              <p>{lesson.checkpoint}</p>
+            </div>
+            <div className="as-check">
+              <h3>Частая ошибка</h3>
+              <p>{lesson.mistake}</p>
+            </div>
+            <details className="as-brush-help" key={`${type}:${frame}:${step}`}>
+              <summary>Кисть и настройки в моей программе</summary>
+              <DeviceDrawingGuide technique={lesson.technique} compact />
+            </details>
             <button
-              className="secondary"
-              disabled={step === 0}
-              onClick={() => study(step - 1)}
-            >
-              <ArrowLeft size={16} /> Предыдущий шаг
-            </button>
-            <button
-              className="primary"
+              className={drawn[key] ? "primary completed" : "primary"}
+              aria-pressed={!!drawn[key]}
               onClick={() =>
-                step < 11 ? study(step + 1) : chooseFrame(frame + 1)
+                dispatch(toggleAnimationDrawingStep({ type, frame, step }))
               }
             >
-              {step < 11 ? "Следующий шаг" : "Строить следующую позу"}
-              <ArrowRight size={16} />
+              <Check size={17} />
+              {drawn[key]
+                ? "Этот шаг нарисован · снять отметку"
+                : "Я нарисовал этот шаг"}
             </button>
+            <p className="caption">
+              В этой позе выполнено {stepCount}/12 шагов. Полностью построено{" "}
+              {phaseComplete}/{frames.length} поз.
+            </p>
+            <div className="as-study-nav">
+              <button
+                className="secondary"
+                disabled={step === 0}
+                onClick={() => study(step - 1)}
+              >
+                <ArrowLeft size={16} /> Предыдущий шаг
+              </button>
+              <button
+                className="primary"
+                onClick={() =>
+                  step < 11 ? study(step + 1) : chooseFrame(frame + 1)
+                }
+              >
+                {step < 11 ? "Следующий шаг" : "Строить следующую позу"}
+                <ArrowRight size={16} />
+              </button>
+            </div>
           </div>
         </div>
       </div>

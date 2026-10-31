@@ -11,11 +11,13 @@ import {
   selectProgress,
   setDevice,
   setLastLesson,
+  setLessonCursor,
   toggleLesson,
 } from "../store/index.js";
 import LessonIllustration from "../LessonIllustration.jsx";
 import NotFoundPage from "./NotFoundPage.jsx";
 import "../foundation-lessons.css";
+import { revealInstruction } from "../revealInstruction.js";
 const allLessons = weeks.flatMap((w) => w.lessons);
 const projectSave = (app) =>
   app.drawingGuide.save
@@ -148,11 +150,19 @@ function FoundationLesson({ lesson }) {
   const navigate = useNavigate();
   const zoomDialog = useRef(null);
   const stepNavigation = useRef(null);
+  const stepBar = useRef(null),
+    stepIntro = useRef(null),
+    revealStep = useRef(false);
   const dispatch = useAppDispatch(),
     { device } = useAppSelector(selectSettings),
     progress = useAppSelector(selectProgress);
   const app = apps.find((a) => a.id === device) || apps[0];
-  const [index, setIndex] = useState(0),
+  const [index, setIndex] = useState(() =>
+      Math.min(
+        progress.lessonCursors?.[lesson.id] || 0,
+        lesson.steps.length - 1,
+      ),
+    ),
     [repeated, setRepeated] = useState({}),
     [checks, setChecks] = useState({}),
     [showError, setShowError] = useState(false);
@@ -163,6 +173,9 @@ function FoundationLesson({ lesson }) {
   useEffect(() => {
     dispatch(setLastLesson(lesson.id));
   }, [dispatch, lesson.id]);
+  useEffect(() => {
+    dispatch(setLessonCursor({ id: lesson.id, index }));
+  }, [dispatch, lesson.id, index]);
   useLayoutEffect(() => {
     // A different lesson starts at its introduction; changing a step stays put.
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -177,7 +190,14 @@ function FoundationLesson({ lesson }) {
     else if (left + button.offsetWidth > nav.scrollLeft + nav.clientWidth)
       nav.scrollLeft = left + button.offsetWidth - nav.clientWidth;
   }, [index]);
+  useLayoutEffect(() => {
+    if (!revealStep.current) return;
+    revealStep.current = false;
+    revealInstruction(stepIntro.current, stepBar.current);
+  }, [index]);
   function choose(n) {
+    revealStep.current = true;
+    if (n === index) revealInstruction(stepIntro.current, stepBar.current);
     setIndex(n);
     setShowError(false);
   }
@@ -200,6 +220,17 @@ function FoundationLesson({ lesson }) {
         <p className="fl-note">
           Рисуй в своей программе на планшете. Здесь можно рассмотреть пример и
           выбрать следующий шаг; сайт не проверяет твой рисунок.
+        </p>
+        <p className="fl-note">
+          Место сохраняется: шаг {index + 1} из {lesson.steps.length}.
+          {index > 0 && (
+            <>
+              {" "}
+              <button className="text-button" onClick={() => choose(0)}>
+                Вернуться к первому шагу
+              </button>
+            </>
+          )}
         </p>
       </div>
       <div className="fl-setup">
@@ -250,7 +281,7 @@ function FoundationLesson({ lesson }) {
           ))}
         </p>
       )}
-      <div className="fl-step-bar">
+      <div className="fl-step-bar" ref={stepBar}>
         <label className="fl-lesson-picker">
           <span>Урок</span>
           <select
@@ -309,7 +340,7 @@ function FoundationLesson({ lesson }) {
       </div>
       <div className="fl-workspace">
         <article className="fl-action" aria-labelledby="fl-active-title">
-          <div className="fl-step-intro">
+          <div className="fl-step-intro" ref={stepIntro}>
             <span className="eyebrow">
               ШАГ {index + 1} ИЗ {lesson.steps.length}
             </span>

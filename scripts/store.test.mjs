@@ -10,6 +10,7 @@ import {
   setDrawingCursor,
   toggleAnimationFrame,
   setLastLesson,
+  setLessonCursor,
   replaceProgress,
   resetProgress,
   selectPersistenceError,
@@ -43,6 +44,29 @@ function memoryStorage(initial = {}) {
   };
 }
 
+test("foundation reading positions survive reload and backup without completing lessons", () => {
+  const storage = memoryStorage();
+  const app = createAppStore({ storage });
+  app.dispatch(setLessonCursor({ id: "w1-l1", index: 3 }));
+  app.dispatch(setLessonCursor({ id: "w10-l2", index: 8 }));
+  app.dispatch(setLessonCursor({ id: "w1-l1", index: -1 }));
+  app.dispatch(setLessonCursor({ id: "w99-l1", index: 2 }));
+  app.dispatch(setLessonCursor({ id: "w1-l1", index: 1.5 }));
+  const reloaded = createAppStore({ storage });
+  assert.deepEqual(reloaded.getState().progress.lessonCursors, {
+    "w1-l1": 3,
+    "w10-l2": 8,
+  });
+  assert.deepEqual(reloaded.getState().progress.lessons, []);
+  const restored = parseBackup(serializeBackup(reloaded.getState()));
+  assert.deepEqual(restored.progress.lessonCursors, {
+    "w1-l1": 3,
+    "w10-l2": 8,
+  });
+  app.dispatch(resetProgress());
+  assert.deepEqual(app.getState().progress.lessonCursors, {});
+});
+
 test("all features update the same Redux state and toggles can be undone", () => {
   const app = createAppStore({ storage: null });
   app.dispatch(setTheme("dark"));
@@ -63,6 +87,7 @@ test("all features update the same Redux state and toggles can be undone", () =>
     lessons: ["w3-l1"],
     drawing: { "duck:duck-original-v5-1": true },
     cursors: { duck: 9, boss: 0 },
+    lessonCursors: {},
     animation: { "run:0": true },
     animationDrawing: {},
     legacyDrawing: {},
