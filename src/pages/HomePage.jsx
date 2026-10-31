@@ -11,7 +11,7 @@ import {
 import { weeks } from "../data/curriculum";
 import { masterclasses } from "../data/masterclasses";
 import { animationFrames } from "../data/animation.js";
-import Diagram from "../Diagram";
+import LessonIllustration from "../LessonIllustration.jsx";
 import { characters } from "../data/characters.js";
 const roadmapCopy = {
   3: [
@@ -286,10 +286,12 @@ export default function HomePage() {
                     loading="lazy"
                   />
                 ) : (
-                  <Diagram
-                    type={w.lessons[1]?.diagram || "body"}
-                    stage={i < 2 ? i : 3}
-                    frame={i % 4}
+                  <LessonIllustration
+                    visual={
+                      w.lessons[1].steps[
+                        Math.min(3, w.lessons[1].steps.length - 1)
+                      ].visual
+                    }
                   />
                 )}
                 <span>

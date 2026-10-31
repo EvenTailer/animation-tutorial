@@ -227,7 +227,7 @@ small {
   margin-left: 238px;
   width: calc(100% - 238px);
 }
-header {
+.workspace > header {
   height: 81px;
   border-bottom: 1px solid var(--line);
   padding: 0 44px;
@@ -1038,7 +1038,7 @@ main > h1 {
   main {
     padding: 30px 28px 0;
   }
-  header {
+  .workspace > header {
     padding: 0 28px;
   }
   .hero {
@@ -1217,11 +1217,11 @@ main > h1 {
     width: 100%;
     margin: 0;
   }
-  header {
+  .workspace > header {
     height: 66px;
     padding: 0 17px;
   }
-  header > div {
+  .workspace > header > div {
     display: flex;
     align-items: center;
   }
