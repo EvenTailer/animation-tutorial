@@ -57,7 +57,7 @@ export default function AnimationStudio() {
     [exportError, setExportError] = useState("");
   const playbackLocation = useRef(location.key),
     active = playing && playbackLocation.current === location.key,
-    frame = active ? playbackFrame % frames.length : routeFrame;
+    frame = active ? Math.floor(playbackFrame) % frames.length : routeFrame;
   const steps = getAnimationDrawingSteps(type, frame),
     lesson = steps[step],
     key = `${type}:${frame}:${step}`,
@@ -82,12 +82,33 @@ export default function AnimationStudio() {
   }, [type, routeFrame, location.key]);
   useEffect(() => {
     if (!active) return;
-    const t = setTimeout(
-      () => setPlaybackFrame((f) => (f + 1) % frames.length),
-      animationDurations[type][frame] / speed,
-    );
-    return () => clearTimeout(t);
-  }, [active, frame, type, speed, frames.length]);
+    let request, previous;
+    const tick = (now) => {
+      if (previous !== undefined) {
+        const elapsed = Math.min(now - previous, 64) * speed;
+        setPlaybackFrame((f) => {
+          let position = f,
+            remaining = elapsed;
+          while (remaining > 0) {
+            const index = Math.floor(position) % frames.length;
+            const duration = animationDurations[type][index];
+            const timeToNext = (Math.floor(position) + 1 - position) * duration;
+            if (remaining < timeToNext) {
+              position += remaining / duration;
+              break;
+            }
+            remaining -= timeToNext;
+            position = (Math.floor(position) + 1) % frames.length;
+          }
+          return position;
+        });
+      }
+      previous = now;
+      request = requestAnimationFrame(tick);
+    };
+    request = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(request);
+  }, [active, type, speed, frames.length]);
   function chooseFrame(next) {
     setPlaying(false);
     setStudying(true);
@@ -130,7 +151,7 @@ export default function AnimationStudio() {
         url = URL.createObjectURL(blob),
         a = document.createElement("a");
       a.href = url;
-      a.download = `duck-${type}-reference-v5.png`;
+      a.download = `duck-${type}-reference-v6.png`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
@@ -174,8 +195,10 @@ export default function AnimationStudio() {
             дальняя левая голень механическая.
           </li>
           <li>
-            Нарисуй нейтральный профиль простыми массами, сравни костюм с
-            исходным артом. Затем начни с ожидания и переходи к бегу и прыжку.
+            Для ожидания нарисуй отдельную расслабленную стойку в лёгком
+            развороте: два глаза, дальний уже, видны две плоскости торса. Для
+            бега и прыжка используй профиль с одним глазом. Не меняй ракурс
+            корпуса в середине цикла бега.
           </li>
         </ol>
         <a
@@ -298,7 +321,7 @@ export default function AnimationStudio() {
           <div className="as-player-art">
             <CharacterAnimation
               type={type}
-              frame={frame}
+              frame={active ? playbackFrame : frame}
               ghost={ghost}
               studyStage={studying ? step : null}
             />

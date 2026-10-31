@@ -11,7 +11,7 @@ export const animationSheets = Object.fromEntries(
       sourceSize: PARTS_SIZE,
       columns: type === "idle" ? 2 : 3,
       rows: 2,
-      title: `${title} · вид сбоку`,
+      title: `${title} · ${type === "idle" ? "стойка в три четверти" : "вид сбоку"}`,
       output: RIG_CANVAS,
       frames: Array.from({ length: count }, (_, frame) => ({ frame })),
     },

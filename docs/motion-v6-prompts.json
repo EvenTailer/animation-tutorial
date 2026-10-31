@@ -1,0 +1,11 @@
+{
+  "tool": "image_gen.imagegen",
+  "prompt": "Use case: scientific-educational. Production 2D game rig replacement parts for this EXACT punk cyber-duck. Input1 exploded rig defines line style, materials and scale. Input2 turnaround defines face and views. Generate exactly FOUR isolated pieces in a clean TWO COLUMN TWO ROW atlas, true transparent background, large margins, no text/grid. TOP LEFT: complete head plus cyberneck, IDLE THREE-QUARTER VIEW facing RIGHT, visibly two eyes with farther eye narrow, bill turned about30degrees toward camera from strict profile, same cream spiky black-magenta hair/golden temple implant, closed angry expression. TOP RIGHT: detached torso plus pelvis/belt/feather tail and dangling magenta waistcloth, IDLE matching three-quarter view facingright, open magenta sleeveless vest over ivory shirt, black trouser waistband, no head/arms/legs; round overlapping shoulder holes suitable for organic arms. BOTTOM LEFT: complete head+cyberneck STRICT RIGHT SIDE PROFILE, only ONE eye, beak exactly right, same design/size as topleft. BOTTOM RIGHT: detached torso+pelvis/belt/tail/waistcloth in STRICT RIGHT SIDE PROFILE for running, narrow chest silhouette, shoulder sockets almost superimposed in depth (NO frontal chest or two wide-spread armholes), most visible outer magenta vest side/back on left and only narrow ivory shirt chest on right, belt buckle at forward right edge, tail and cloth extend behind toleft. Neck at topcenter. No limbs at all on torso pieces. Both torsos upright neutral, complete overlapping joint material, both heads neutral angle. Match source anatomical scale; head fills similar rectangle each cell, torso similar each cell. Hand-ink celshaded finished illustration, same exact outfit palette/source design, no redesign. Keep ALL each piece fully INSIDE own cell with20%margin and50px gutter. No full characters, no hands, no shoes, no cast shadows. Transparent alpha required.",
+  "references": [
+    "public/assets/duck-profile-parts-v5.png",
+    "D:/My game/picture/главный герой/15-duck-rig-poses.png"
+  ],
+  "generatedSource": "C:/Users/ilyag/.codex/generated_images/01a18d0e-f02c-7f62-a9a4-9d17972b9320/exec-9ce34e37-b534-459e-a246-bbbcc6017fc9.png",
+  "projectAsset": "public/assets/duck-rig-views-v6.png",
+  "alpha": true
+}

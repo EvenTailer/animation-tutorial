@@ -19,9 +19,9 @@ export const animationFrames = {
 };
 
 export const animationDurations = {
-  run: [90, 80, 110, 90, 80, 110],
-  jump: [450, 500, 100, 300, 180, 450],
-  idle: [400, 550, 350, 600],
+  run: [120, 120, 120, 120, 120, 120],
+  jump: [220, 220, 220, 220, 220, 220],
+  idle: [600, 600, 600, 600],
 };
 
 export const animationLessons = {

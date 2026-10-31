@@ -9,6 +9,12 @@ import {
   RIG_CANVAS,
 } from "../src/data/animationRig.js";
 import { animationFrames } from "../src/data/animation.js";
+import {
+  getAnimationPart,
+  animationViews,
+  VIEWS_SIZE,
+  VIEWS_ATLAS_OFFSET,
+} from "../src/data/animationViews.js";
 import { getAnimationDrawingSteps } from "../src/data/animationDrawing.js";
 const image = readPng(new URL(`../public${PARTS_SOURCE}`, import.meta.url));
 assert.deepEqual([image.width, image.height], PARTS_SIZE);
@@ -55,7 +61,7 @@ for (const [type, frames] of Object.entries(animationFrames)) {
         Math.abs(m[0] ** 2 + m[1] ** 2 - m[2] ** 2 - m[3] ** 2) < 1e-8,
         "Parts rotate and scale uniformly",
       );
-      const b = animationParts[item.id].bbox;
+      const b = getAnimationPart(type, item.id).bbox;
       for (const p of [
         [b.x, b.y],
         [b.x + b.width, b.y],

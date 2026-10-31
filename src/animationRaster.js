@@ -1,5 +1,10 @@
 import { animationSheets } from "./data/animationSheets.js";
 import {
+  getAnimationPart,
+  VIEWS_SOURCE,
+  VIEWS_ATLAS_OFFSET,
+} from "./data/animationViews.js";
+import {
   animationParts,
   getRigDrawPlan,
   getRigPose,
@@ -18,7 +23,8 @@ function getStudyAssets(image, type, frame) {
     const pixels = c.getImageData(0, 0, source.width, source.height),
       data = pixels.data;
     const visited = new Set();
-    for (const part of Object.values(animationParts)) {
+    for (const id of Object.keys(animationParts)) {
+      const part = getAnimationPart(type, id);
       const r = part.sourceRect;
       const rectKey = JSON.stringify(r);
       if (visited.has(rectKey)) continue;
@@ -108,7 +114,7 @@ function getStudyAssets(image, type, frame) {
     const wc = work.getContext("2d"),
       rc = raw.getContext("2d");
     for (const item of getRigDrawPlan(type, frame)) {
-      const r = animationParts[item.id].sourceRect;
+      const r = getAnimationPart(type, item.id).sourceRect;
       for (const [ctx, source] of [
         [wc, cache.source],
         [rc, image],
@@ -175,20 +181,37 @@ function getStudyAssets(image, type, frame) {
 export function loadAnimationImage(type) {
   const sheet = animationSheets[type];
   if (!sheet) throw new TypeError("Unknown animation");
-  if (!images.has(sheet.src))
+  const key = `${sheet.src}:${type}`;
+  if (!images.has(key))
     images.set(
-      sheet.src,
+      key,
       new Promise((resolve, reject) => {
         const image = new Image();
-        image.onload = () => resolve(image);
+        image.onload = () => {
+          const views = new Image();
+          views.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(image.width, views.width);
+            canvas.height = VIEWS_ATLAS_OFFSET + views.height;
+            const c = canvas.getContext("2d");
+            c.drawImage(image, 0, 0);
+            c.drawImage(views, 0, VIEWS_ATLAS_OFFSET);
+            resolve(canvas);
+          };
+          views.onerror = () => {
+            images.delete(key);
+            reject(new Error("Could not load rig views"));
+          };
+          views.src = VIEWS_SOURCE;
+        };
         image.onerror = () => {
-          images.delete(sheet.src);
+          images.delete(key);
           reject(new Error("Could not load character parts"));
         };
         image.src = sheet.src;
       }),
     );
-  return images.get(sheet.src);
+  return images.get(key);
 }
 export function drawAnimationFrame(
   context,
@@ -203,7 +226,7 @@ export function drawAnimationFrame(
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
   for (const item of getRigDrawPlan(type, frame)) {
-    const r = animationParts[item.id].sourceRect;
+    const r = getAnimationPart(type, item.id).sourceRect;
     context.save();
     context.transform(...item.matrix);
     context.drawImage(
@@ -470,7 +493,7 @@ export async function exportAnimationAtlas(type) {
 
 function drawCostumeGuides(context, type, frame) {
   for (const item of getRigDrawPlan(type, frame)) {
-    const part = animationParts[item.id],
+    const part = getAnimationPart(type, item.id),
       b = part.bbox;
     const local = (points) =>
       points.map(([x, y]) => [b.x + x * b.width, b.y + y * b.height]);

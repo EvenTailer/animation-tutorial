@@ -24,8 +24,9 @@ export default function CharacterAnimation({
   const selected = Object.hasOwn(animationSheets, type) ? type : "idle";
   const sheet = animationSheets[selected],
     count = sheet.frames.length;
-  const index =
-    ((Math.floor(Number.isFinite(frame) ? frame : 0) % count) + count) % count;
+  const position =
+    (((Number.isFinite(frame) ? frame : 0) % count) + count) % count;
+  const index = Math.floor(position);
   const canvas = useRef(null);
   const [loaded, setLoaded] = useState({
     src: null,
@@ -61,10 +62,19 @@ export default function CharacterAnimation({
         { opacity: 0.2 },
       );
     if (studyStage === null)
-      drawAnimationFrame(context, current.image, selected, index);
+      drawAnimationFrame(context, current.image, selected, position);
     else
       drawAnimationStudy(context, current.image, selected, index, studyStage);
-  }, [current.image, selected, index, count, ghost, sheet, studyStage]);
+  }, [
+    current.image,
+    selected,
+    index,
+    position,
+    count,
+    ghost,
+    sheet,
+    studyStage,
+  ]);
   return (
     <figure className="character-animation" aria-label={sheet.title}>
       <figcaption className="character-animation-heading">
@@ -84,6 +94,7 @@ export default function CharacterAnimation({
         ) : (
           <canvas
             ref={canvas}
+            data-phase={position.toFixed(4)}
             className="character-animation-canvas"
             width={sheet.output.width}
             height={sheet.output.height}
@@ -98,7 +109,12 @@ export default function CharacterAnimation({
         )}
       </div>
       <div className="character-animation-ground">
-        <span>Вид сбоку · вправо · холст 512 × 600 · общая земля</span>
+        <span>
+          {selected === "idle"
+            ? "Стойка в три четверти"
+            : "Боковая плоскость движения"}{" "}
+          · вправо · холст 512 × 600 · общая земля
+        </span>
       </div>
       <div className="character-animation-caption">
         <strong>
