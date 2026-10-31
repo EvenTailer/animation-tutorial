@@ -15,7 +15,7 @@ const ids = new Set();
 const sheets = new Map();
 for (const course of masterclasses) {
   const steps = course.chapters.flatMap((chapter) => chapter.steps);
-  assert.equal(steps.length, course.id === "duck" ? 60 : 36);
+  assert.equal(steps.length, course.id === "duck" ? 84 : 96);
   assert.ok(existsSync(new URL(`public${course.reference}`, root)));
   for (const step of steps) {
     assert.ok(!ids.has(step.id), `Duplicate stage: ${step.id}`);
@@ -25,8 +25,8 @@ for (const course of masterclasses) {
       `New course ID must save: ${step.id}`,
     );
     assert.ok(
-      step.sheet.includes("profile-") && step.sheet.endsWith("-v4.png"),
-      `Current lessons must use new profile art: ${step.sheet}`,
+      step.sheet.includes("original-") && step.sheet.endsWith("-v5.png"),
+      `Main lessons must use original-pose art: ${step.sheet}`,
     );
     for (const field of [
       "title",
@@ -81,7 +81,7 @@ assert.equal(weeks.length, 10);
 const lessons = weeks.flatMap((week) => week.lessons);
 assert.equal(lessons.length, 30);
 assert.equal(new Set(lessons.map((lesson) => lesson.id)).size, 30);
-assert.equal(sheets.size, 8);
+assert.equal(sheets.size, 15);
 assert.deepEqual(Object.keys(animationFrames).sort(), ["idle", "jump", "run"]);
 for (const [motion, frames] of Object.entries(animationFrames)) {
   assert.equal(animationDurations[motion].length, frames.length);

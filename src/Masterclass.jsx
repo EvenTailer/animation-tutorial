@@ -22,6 +22,7 @@ import {
 import { masterclasses } from "./data/masterclasses";
 import "./masterclass.css";
 import BeginnerSetup, { HeadPlacement } from "./BeginnerSetup";
+import DeviceDrawingGuide from "./DeviceDrawingGuide.jsx";
 
 function courseIndex(id, value) {
   const c = masterclasses.find((c) => c.id === id) || masterclasses[0];
@@ -244,9 +245,7 @@ export default function Masterclass() {
   );
   return (
     <section className="masterclass">
-      <div className="eyebrow">
-        НОВЫЕ ПЕРСОНАЖИ · РИСУЕМ ПРОФИЛЬ ДЛЯ МЕТРОИДВАНИИ
-      </div>
+      <div className="eyebrow">ИСХОДНЫЙ АРТ · РИСУЕМ ИМЕННО ЭТУ ПОЗУ</div>
       <div className="mc-intro">
         <h1>
           Рисуем новый арт.
@@ -288,9 +287,10 @@ export default function Masterclass() {
         ))}
       </div>
       <aside className="mc-route-update">
-        <strong>Один ракурс — от построения до цвета.</strong> Все панели этого
-        урока созданы по новым персонажам. Рисуем боковой вид вправо; исходный
-        арт помогает сверять костюм и материалы.{" "}
+        <strong>Исходная композиция — от построения до цвета.</strong> Все
+        панели этого урока созданы по исходным артам. Сохраняем их позу,
+        пропорции и экранные стороны; профиль изучаем позже, отдельно для
+        движения.{" "}
         <a href={course.currentArt} target="_blank" rel="noreferrer">
           Открыть актуальный референс
         </a>
@@ -498,7 +498,26 @@ export default function Masterclass() {
             {step.title}
           </h2>
           <p className="mc-goal">{step.goal}</p>
-          {character === "duck" && index === 0 && <HeadPlacement />}
+          {index === 0 && (
+            <HeadPlacement
+              reference={course.reference}
+              poseGuide={course.poseGuide}
+            />
+          )}
+          <DeviceDrawingGuide
+            key={step.chapterId}
+            technique={
+              step.technique ||
+              (/тень|тен[ьи]|блик|свет|фактур/i.test(step.title)
+                ? "shade"
+                : /залей|цвет|залив/i.test(step.title)
+                  ? "fill"
+                  : /контур|обвед|очист/i.test(step.title)
+                    ? "ink"
+                    : "sketch")
+            }
+            compact
+          />
           <dl className="mc-tool-info">
             <div>
               <dt>Инструмент</dt>

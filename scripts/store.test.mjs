@@ -1,5 +1,5 @@
 import test from "node:test";
-import { ANIMATION_COUNTS } from "../src/routing/paths.js";
+import { ANIMATION_COUNTS, COURSE_COUNTS } from "../src/routing/paths.js";
 import assert from "node:assert/strict";
 import {
   createAppStore,
@@ -19,6 +19,8 @@ import {
   CONTENT_REVISION,
   loadPersistedState,
   normalizeProgress,
+  isDrawingKey,
+  isAnimationDrawingKey,
   parseBackup,
   serializeBackup,
   resolveBrowserStorage,
@@ -47,7 +49,7 @@ test("all features update the same Redux state and toggles can be undone", () =>
   app.dispatch(setDevice("samsung"));
   app.dispatch(toggleLesson("w3-l1"));
   app.dispatch(
-    toggleDrawingStep({ character: "duck", stepId: "duck-profile-v4-1" }),
+    toggleDrawingStep({ character: "duck", stepId: "duck-original-v5-1" }),
   );
   app.dispatch(setDrawingCursor({ character: "duck", index: 9 }));
   app.dispatch(toggleAnimationFrame({ type: "run", frame: 0 }));
@@ -59,16 +61,17 @@ test("all features update the same Redux state and toggles can be undone", () =>
   assert.deepEqual(app.getState().progress, {
     contentRevision: CONTENT_REVISION,
     lessons: ["w3-l1"],
-    drawing: { "duck:duck-profile-v4-1": true },
+    drawing: { "duck:duck-original-v5-1": true },
     cursors: { duck: 9, boss: 0 },
     animation: { "run:0": true },
+    animationDrawing: {},
     legacyDrawing: {},
     legacyAnimation: {},
     lastLesson: "w3-l1",
   });
   app.dispatch(toggleLesson("w3-l1"));
   app.dispatch(
-    toggleDrawingStep({ character: "duck", stepId: "duck-profile-v4-1" }),
+    toggleDrawingStep({ character: "duck", stepId: "duck-original-v5-1" }),
   );
   app.dispatch(toggleAnimationFrame({ type: "run", frame: 0 }));
   assert.deepEqual(app.getState().progress.lessons, []);
@@ -143,7 +146,7 @@ test("invalid actions, malformed arrays and maps are rejected safely", () => {
   app.dispatch(setDevice("unknown"));
   app.dispatch(toggleLesson({ id: "w1-l1" }));
   app.dispatch(
-    toggleDrawingStep({ character: "duck", stepId: "boss-profile-v4-1" }),
+    toggleDrawingStep({ character: "duck", stepId: "boss-original-v5-1" }),
   );
   app.dispatch(setDrawingCursor({ character: "__proto__", index: 9 }));
   app.dispatch(toggleAnimationFrame({ type: "run", frame: -1 }));
@@ -151,12 +154,12 @@ test("invalid actions, malformed arrays and maps are rejected safely", () => {
   assert.deepEqual(app.getState().progress.lessons, []);
   assert.deepEqual(app.getState().progress.drawing, {});
   const dirty = JSON.parse(
-    '{"contentRevision":4,"lessons":["w1-l1","w1-l1",2],"drawing":{"__proto__":true,"duck:duck-profile-v4-1":true,"boss:duck-profile-v4-1":true,"duck:duck-profile-v4-2":"true"},"animation":{"run:0":true,"run:-1":true},"cursors":{"duck":-9,"boss":"2"},"legacyDrawing":{"constructor":true}}',
+    '{"contentRevision":5,"lessons":["w1-l1","w1-l1",2],"drawing":{"__proto__":true,"duck:duck-original-v5-1":true,"boss:duck-original-v5-1":true,"duck:duck-original-v5-2":"true"},"animation":{"run:0":true,"run:-1":true},"cursors":{"duck":-9,"boss":"2"},"legacyDrawing":{"constructor":true}}',
   );
   app.dispatch(replaceProgress(dirty));
   assert.deepEqual(app.getState().progress.lessons, ["w1-l1"]);
   assert.deepEqual(app.getState().progress.drawing, {
-    "duck:duck-profile-v4-1": true,
+    "duck:duck-original-v5-1": true,
   });
   assert.deepEqual(app.getState().progress.animation, { "run:0": true });
   assert.deepEqual(app.getState().progress.cursors, { duck: 0, boss: 0 });
@@ -182,13 +185,13 @@ test("corrupted unified storage does not fall back to obsolete legacy progress",
 test("backup v4 round-trips and importer can validate against lazy content", () => {
   const app = createAppStore({ storage: null });
   app.dispatch(
-    toggleDrawingStep({ character: "duck", stepId: "duck-profile-v4-1" }),
+    toggleDrawingStep({ character: "duck", stepId: "duck-original-v5-1" }),
   );
   app.dispatch(toggleLesson("w1-l1"));
   app.dispatch(toggleAnimationFrame({ type: "run", frame: 0 }));
   const restored = parseBackup(serializeBackup(app.getState()), {
     lessonIds: ["w1-l1"],
-    drawingKeys: ["duck:duck-profile-v4-1"],
+    drawingKeys: ["duck:duck-original-v5-1"],
     animationKeys: ["run:0"],
     characterStepCounts: { duck: 60, boss: 36 },
   });
@@ -199,21 +202,21 @@ test("backup v4 round-trips and importer can validate against lazy content", () 
       contentRevision: CONTENT_REVISION,
       lessons: ["w1-l1", "w2-l1"],
       drawing: {
-        "duck:duck-profile-v4-1": true,
-        "duck:duck-profile-v4-999": true,
+        "duck:duck-original-v5-1": true,
+        "duck:duck-original-v5-999": true,
       },
       cursors: { duck: 999 },
       animation: { "run:999": true },
     },
     {
       lessonIds: ["w1-l1"],
-      drawingKeys: ["duck:duck-profile-v4-1"],
+      drawingKeys: ["duck:duck-original-v5-1"],
       animationKeys: ["run:0"],
       characterStepCounts: { duck: 60 },
     },
   );
   assert.deepEqual(filtered.lessons, ["w1-l1"]);
-  assert.deepEqual(filtered.drawing, { "duck:duck-profile-v4-1": true });
+  assert.deepEqual(filtered.drawing, { "duck:duck-original-v5-1": true });
   assert.equal(filtered.cursors.duck, 59);
   assert.deepEqual(filtered.animation, {});
 });
@@ -256,35 +259,38 @@ test("store is SSR-safe, and explicit preloaded state is isolated from disk", ()
 
 test("current cursors and progress keys stay within real drawing and animation bounds", () => {
   const app = createAppStore({ storage: null });
-  app.dispatch(setDrawingCursor({ character: "duck", index: 60 }));
+  app.dispatch(setDrawingCursor({ character: "duck", index: 9999 }));
   app.dispatch(setDrawingCursor({ character: "boss", index: 9999 }));
-  assert.deepEqual(app.getState().progress.cursors, { duck: 59, boss: 35 });
+  assert.deepEqual(app.getState().progress.cursors, {
+    duck: COURSE_COUNTS.duck - 1,
+    boss: COURSE_COUNTS.boss - 1,
+  });
   for (const [character, validLast, invalidNext] of [
-    ["duck", 60, 61],
-    ["boss", 36, 37],
+    ["duck", COURSE_COUNTS.duck, COURSE_COUNTS.duck + 1],
+    ["boss", COURSE_COUNTS.boss, COURSE_COUNTS.boss + 1],
   ]) {
     app.dispatch(
       toggleDrawingStep({
         character,
-        stepId: `${character}-profile-v4-${validLast}`,
+        stepId: `${character}-original-v5-${validLast}`,
       }),
     );
     app.dispatch(
       toggleDrawingStep({
         character,
-        stepId: `${character}-profile-v4-${invalidNext}`,
+        stepId: `${character}-original-v5-${invalidNext}`,
       }),
     );
     app.dispatch(
-      toggleDrawingStep({ character, stepId: `${character}-profile-v4-0` }),
+      toggleDrawingStep({ character, stepId: `${character}-original-v5-0` }),
     );
     app.dispatch(
-      toggleDrawingStep({ character, stepId: `${character}-profile-v4-01` }),
+      toggleDrawingStep({ character, stepId: `${character}-original-v5-01` }),
     );
   }
   assert.deepEqual(app.getState().progress.drawing, {
-    "duck:duck-profile-v4-60": true,
-    "boss:boss-profile-v4-36": true,
+    "duck:duck-original-v5-84": true,
+    "boss:boss-original-v5-96": true,
   });
   for (const [type, count] of Object.entries(ANIMATION_COUNTS)) {
     app.dispatch(toggleAnimationFrame({ type, frame: count - 1 }));
@@ -301,8 +307,8 @@ test("current cursors and progress keys stay within real drawing and animation b
     replaceProgress({
       contentRevision: CONTENT_REVISION,
       drawing: {
-        "duck:duck-profile-v4-1": true,
-        "duck:duck-profile-v4-999": true,
+        "duck:duck-original-v5-1": true,
+        "duck:duck-original-v5-999": true,
         "duck:duck-01": true,
       },
       animation: {
@@ -315,12 +321,15 @@ test("current cursors and progress keys stay within real drawing and animation b
     }),
   );
   assert.deepEqual(app.getState().progress.drawing, {
-    "duck:duck-profile-v4-1": true,
+    "duck:duck-original-v5-1": true,
   });
   assert.deepEqual(app.getState().progress.animation, {
     [`run:${ANIMATION_COUNTS.run - 1}`]: true,
   });
-  assert.deepEqual(app.getState().progress.cursors, { duck: 59, boss: 0 });
+  assert.deepEqual(app.getState().progress.cursors, {
+    duck: COURSE_COUNTS.duck - 1,
+    boss: 0,
+  });
   assert.deepEqual(app.getState().progress.legacyDrawing, {
     "duck:duck-01": true,
     "boss:boss-12": true,
@@ -337,25 +346,28 @@ test("persisted out-of-range cursors are clamped before UI reads and bounds cann
         cursors: { duck: 6000, boss: 3600 },
         animation: { "hit:6": true, "hit:5": true },
         drawing: {
-          "boss:boss-profile-v4-37": true,
-          "boss:boss-profile-v4-36": true,
+          "boss:boss-original-v5-97": true,
+          "boss:boss-original-v5-96": true,
         },
         legacyDrawing: { "duck:duck-01": true },
       },
     }),
   });
   const app = createAppStore({ storage });
-  assert.deepEqual(app.getState().progress.cursors, { duck: 59, boss: 35 });
+  assert.deepEqual(app.getState().progress.cursors, {
+    duck: COURSE_COUNTS.duck - 1,
+    boss: COURSE_COUNTS.boss - 1,
+  });
   assert.deepEqual(app.getState().progress.animation, { "hit:5": true });
   assert.deepEqual(app.getState().progress.drawing, {
-    "boss:boss-profile-v4-36": true,
+    "boss:boss-original-v5-96": true,
   });
   assert.equal(app.getState().progress.legacyDrawing["duck:duck-01"], true);
   const normalized = normalizeProgress(
     { cursors: { duck: 500 } },
     { characterStepCounts: { duck: 1000 } },
   );
-  assert.equal(normalized.cursors.duck, 59);
+  assert.equal(normalized.cursors.duck, COURSE_COUNTS.duck - 1);
 });
 
 test("unversioned unified state archives numeric drawings and all former animation frames once", () => {
@@ -390,7 +402,7 @@ test("unversioned unified state archives numeric drawings and all former animati
   assert.deepEqual(normalizeProgress(first), first);
 });
 
-test("profile revision drawings and animation persist and round-trip separately from archives", () => {
+test("original artwork revision drawings and animation persist and round-trip separately from archives", () => {
   const storage = memoryStorage();
   const app = createAppStore({
     storage,
@@ -404,10 +416,10 @@ test("profile revision drawings and animation persist and round-trip separately 
     },
   });
   app.dispatch(
-    toggleDrawingStep({ character: "duck", stepId: "duck-profile-v4-60" }),
+    toggleDrawingStep({ character: "duck", stepId: "duck-original-v5-84" }),
   );
   app.dispatch(
-    toggleDrawingStep({ character: "boss", stepId: "boss-profile-v4-36" }),
+    toggleDrawingStep({ character: "boss", stepId: "boss-original-v5-96" }),
   );
   app.dispatch(
     toggleAnimationFrame({ type: "run", frame: ANIMATION_COUNTS.run - 1 }),
@@ -419,8 +431,8 @@ test("profile revision drawings and animation persist and round-trip separately 
     current,
   );
   assert.deepEqual(current.drawing, {
-    "duck:duck-profile-v4-60": true,
-    "boss:boss-profile-v4-36": true,
+    "duck:duck-original-v5-84": true,
+    "boss:boss-original-v5-96": true,
   });
   assert.deepEqual(current.animation, {
     [`run:${ANIMATION_COUNTS.run - 1}`]: true,
@@ -432,7 +444,7 @@ test("profile revision drawings and animation persist and round-trip separately 
   assert.deepEqual(app.getState().progress.legacyAnimation, {});
 });
 
-test("old v4 backups migrate to the profile revision without marking its new animation", () => {
+test("old v4 backups migrate to the original artwork revision without marking its new animation", () => {
   const restored = parseBackup({
     version: 4,
     settings: {},
@@ -450,15 +462,150 @@ test("old v4 backups migrate to the profile revision without marking its new ani
   const current = normalizeProgress({
     contentRevision: CONTENT_REVISION,
     drawing: {
-      "duck:duck-profile-v4-0": true,
-      "duck:duck-profile-v4-01": true,
-      "duck:duck-profile-v4-61": true,
-      "boss:boss-profile-v4-37": true,
-      "boss:duck-profile-v4-1": true,
-      "duck:duck-profile-v4-1": true,
+      "duck:duck-original-v5-0": true,
+      "duck:duck-original-v5-01": true,
+      "duck:duck-original-v5-85": true,
+      "boss:boss-original-v5-97": true,
+      "boss:duck-original-v5-1": true,
+      "duck:duck-original-v5-1": true,
     },
     animation: { [`run:${ANIMATION_COUNTS.run}`]: true, "run:0": true },
   });
-  assert.deepEqual(current.drawing, { "duck:duck-profile-v4-1": true });
+  assert.deepEqual(current.drawing, { "duck:duck-original-v5-1": true });
   assert.deepEqual(current.animation, { "run:0": true });
+});
+
+test("revision 4 profile marks migrate once using their old 60/36 bounds", () => {
+  const storage = memoryStorage({
+    [STORAGE_KEY]: JSON.stringify({
+      version: 1,
+      settings: { device: "huawei", theme: "dark" },
+      progress: {
+        contentRevision: 4,
+        lessons: ["w2-l1"],
+        drawing: {
+          "duck:duck-profile-v4-60": true,
+          "duck:duck-profile-v4-61": true,
+          "boss:boss-profile-v4-36": true,
+          "boss:boss-profile-v4-37": true,
+          "boss:duck-profile-v4-1": true,
+        },
+        animation: { "run:5": true, "jump:5": true, "idle:3": true },
+        animationDrawing: { "run:0:0": true },
+        legacyDrawing: {
+          "duck:duck-160": true,
+          "boss:boss-136": true,
+          "duck:duck-161": true,
+          "boss:boss-profile-v4-37": true,
+        },
+      },
+    }),
+  });
+  const first = createAppStore({ storage }).getState();
+  assert.equal(first.progress.contentRevision, 5);
+  assert.deepEqual(first.progress.drawing, {});
+  assert.deepEqual(first.progress.animation, {});
+  assert.deepEqual(first.progress.animationDrawing, {});
+  assert.deepEqual(first.progress.legacyDrawing, {
+    "duck:duck-160": true,
+    "boss:boss-136": true,
+    "duck:duck-profile-v4-60": true,
+    "boss:boss-profile-v4-36": true,
+  });
+  assert.deepEqual(first.progress.legacyAnimation, {
+    "run:5": true,
+    "jump:5": true,
+    "idle:3": true,
+  });
+  assert.deepEqual(
+    createAppStore({ storage }).getState().progress,
+    first.progress,
+  );
+  assert.deepEqual(
+    parseBackup(serializeBackup(first)).progress,
+    first.progress,
+  );
+});
+
+test("original artwork IDs and animation drawing microsteps reject cross-character and out-of-range keys", () => {
+  for (const [character, count] of Object.entries(COURSE_COUNTS)) {
+    assert.ok(isDrawingKey(`${character}:${character}-original-v5-1`));
+    assert.ok(isDrawingKey(`${character}:${character}-original-v5-${count}`));
+    for (const suffix of ["0", "01", String(count + 1), "-1", "1.5"])
+      assert.equal(
+        isDrawingKey(`${character}:${character}-original-v5-${suffix}`),
+        false,
+      );
+  }
+  assert.equal(isDrawingKey("duck:boss-original-v5-1"), false);
+  assert.equal(isDrawingKey("duck:duck-profile-v4-1"), false);
+  for (const type of ["idle", "run", "jump"]) {
+    assert.ok(isAnimationDrawingKey(`${type}:0:0`));
+    assert.ok(
+      isAnimationDrawingKey(`${type}:${ANIMATION_COUNTS[type] - 1}:11`),
+    );
+    for (const key of [
+      `${type}:${ANIMATION_COUNTS[type]}:0`,
+      `${type}:0:12`,
+      `${type}:-1:0`,
+      `${type}:01:0`,
+      `${type}:0:01`,
+      `${type}:0:-1`,
+    ])
+      assert.equal(isAnimationDrawingKey(key), false, key);
+  }
+  for (const invalid of ["hit:0:0", "run:0", "run:0:0:1", "__proto__", null, 1])
+    assert.equal(isAnimationDrawingKey(invalid), false);
+});
+
+test("revision 5 animation drawing actions persist and backup without promoting archived marks", () => {
+  const storage = memoryStorage();
+  const app = createAppStore({
+    storage,
+    preloadedState: {
+      progress: {
+        contentRevision: CONTENT_REVISION,
+        lessons: [],
+        drawing: {
+          "duck:duck-original-v5-84": true,
+          "boss:boss-original-v5-96": true,
+        },
+        animation: { "run:0": true },
+        animationDrawing: {
+          "run:0:0": true,
+          [`run:${ANIMATION_COUNTS.run - 1}:11`]: true,
+          "jump:5:11": true,
+          "idle:3:4": true,
+          "run:0:12": true,
+          "run:0:1": "true",
+          "hit:0:0": true,
+        },
+        legacyDrawing: { "duck:duck-profile-v4-60": true },
+        legacyAnimation: { "run:7": true },
+      },
+    },
+  });
+  const expected = {
+    "run:0:0": true,
+    [`run:${ANIMATION_COUNTS.run - 1}:11`]: true,
+    "jump:5:11": true,
+    "idle:3:4": true,
+  };
+  const progress = app.getState().progress;
+  assert.deepEqual(progress.animationDrawing, expected);
+  assert.deepEqual(createAppStore({ storage }).getState().progress, progress);
+  const backup = serializeBackup(app.getState());
+  assert.deepEqual(JSON.parse(backup).progress.animationDrawing, expected);
+  assert.deepEqual(parseBackup(backup).progress, progress);
+  const restricted = normalizeProgress(progress, {
+    animationDrawingKeys: ["run:0:0"],
+  });
+  assert.deepEqual(restricted.animationDrawing, { "run:0:0": true });
+  assert.equal(restricted.legacyAnimation["run:7"], true);
+  app.dispatch(resetProgress());
+  assert.deepEqual(app.getState().progress.animationDrawing, {});
+  assert.deepEqual(
+    createAppStore({ storage }).getState().progress.animationDrawing,
+    {},
+  );
 });

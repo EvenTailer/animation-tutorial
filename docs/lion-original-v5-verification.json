@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-31",
+  "course": "boss-original-v5",
+  "chapters": 8,
+  "steps": 96,
+  "newRasterSheets": 8,
+  "uniqueIds": 96,
+  "sourceUnchanged": true,
+  "sourceSha256": "d2bbbe377a53a8fe5d8e2d40aca056ecc12211cd39dd18671697f254a7d6f950",
+  "checks": [
+    "Sequential unique IDs1–96",
+    "12panels per chapter",
+    "One action plus checkpoint and common mistake per step",
+    "All asset paths use new original-v5 namespace",
+    "All8PNG valid and panel dimensions >=250px",
+    "User source and reference copy have identical SHA256"
+  ],
+  "images": [
+    {
+      "path": "/assets/boss-original-composition-steps-v5.png",
+      "width": 1536,
+      "height": 1024,
+      "columns": 4,
+      "rows": 3,
+      "panels": 12,
+      "sha256": "b7029ccb8f5292d29704ad3ccd1480d9399233e37ff248aa3473ad8cc96c39a0"
+    },
+    {
+      "path": "/assets/boss-original-head-steps-v5.png",
+      "width": 1536,
+      "height": 1024,
+      "columns": 4,
+      "rows": 3,
+      "panels": 12,
+      "sha256": "d3e4bb4bf40eed36dd0ed879405efd6e8edf4174249d840900820ccddd583e94"
+    },
+    {
+      "path": "/assets/boss-original-mane-steps-v5.png",
+      "width": 1448,
+      "height": 1086,
+      "columns": 4,
+      "rows": 3,
+      "panels": 12,
+      "sha256": "6be0ea82d7afc16fc26fa692ce1e9f7a5a37e93fbab5b127d0c2d6bf7bfe1835"
+    },
+    {
+      "path": "/assets/boss-original-torso-steps-v5.png",
+      "width": 1536,
+      "height": 1024,
+      "columns": 4,
+      "rows": 3,
+      "panels": 12,
+      "sha256": "61850a8ae21644befe8bb5b3196890b1fb2d2f94253cb91724d4df85d3167177"
+    },
+    {
+      "path": "/assets/boss-original-arms-steps-v5.png",
+      "width": 1536,
+      "height": 1024,
+      "columns": 4,
+      "rows": 3,
+      "panels": 12,
+      "sha256": "a6af7a33af0a9ef14ff0497c75e5dd8a5cf177ed937e34c9e031101e18ecf6ef"
+    },
+    {
+      "path": "/assets/boss-original-legs-steps-v5.png",
+      "width": 1536,
+      "height": 1024,
+      "columns": 4,
+      "rows": 3,
+      "panels": 12,
+      "sha256": "f6d5073d386090cccfb19047833c9787532d9f01ca59dcdff9dc774c38a421f2"
+    },
+    {
+      "path": "/assets/boss-original-weapon-steps-v5.png",
+      "width": 1536,
+      "height": 1024,
+      "columns": 4,
+      "rows": 3,
+      "panels": 12,
+      "sha256": "601c4438ed0b834598336b6daa6c8224da89bf554afc9580ad7fd2bc59cdc95c"
+    },
+    {
+      "path": "/assets/boss-original-finish-steps-v5.png",
+      "width": 1536,
+      "height": 1024,
+      "columns": 4,
+      "rows": 3,
+      "panels": 12,
+      "sha256": "e4ab6d3ad3f24a8a760a6ee8dcd76e42e77acd52da63c3ad4be07e8e59591f05"
+    }
+  ]
+}

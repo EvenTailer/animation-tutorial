@@ -1,4 +1,5 @@
 import React from "react";
+import DeviceDrawingGuide from "../DeviceDrawingGuide.jsx";
 import { ArrowUpRight, Check, Monitor, Download } from "lucide-react";
 import {
   useAppDispatch,
@@ -94,6 +95,7 @@ export default function ToolsPage() {
         занятиях подстроятся. Сам сайт бесплатный; условия приложений
         отличаются.
       </p>
+      <DeviceDrawingGuide />
       <div className="app-grid">
         {apps.map((a) => (
           <button

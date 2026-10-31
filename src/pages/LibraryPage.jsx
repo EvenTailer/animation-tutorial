@@ -111,17 +111,18 @@ export default function LibraryPage() {
       </section>
       <section className="info-panel">
         <span className="eyebrow">УРОКИ НОВЫХ ПЕРСОНАЖЕЙ</span>
-        <h2>Нарисуй героя и льва сбоку</h2>
+        <h2>Повтори исходные арты героя и льва</h2>
         <p>
-          Новые растровые этапы показывают построение именно этих персонажей: 60
-          действий для утёнка и 36 для льва. Ракурс — профиль вправо.
+          Новые растровые этапы показывают построение исходных поз: 84 действия
+          для утёнка и 96 для льва. Боковой вид изучается отдельно, после
+          основного арта.
         </p>
         <div className="link-row">
           <button className="secondary" onClick={() => openMasterclass("duck")}>
-            Новый утёнок · 60 шагов <ArrowUpRight size={17} />
+            Исходный утёнок · 84 шага <ArrowUpRight size={17} />
           </button>
           <button className="secondary" onClick={() => openMasterclass("boss")}>
-            Лев Гордыня · 36 шагов <ArrowUpRight size={17} />
+            Исходный лев · 96 шагов <ArrowUpRight size={17} />
           </button>
         </div>
       </section>

@@ -1,4 +1,4 @@
-export const COURSE_COUNTS = Object.freeze({ duck: 60, boss: 36 });
+export const COURSE_COUNTS = Object.freeze({ duck: 84, boss: 96 });
 export const ANIMATION_COUNTS = Object.freeze({
   idle: 4,
   run: 6,

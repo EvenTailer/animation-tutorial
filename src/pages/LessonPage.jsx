@@ -8,7 +8,7 @@ import {
   Pause,
   Clock,
 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   useAppDispatch,
   useAppSelector,
@@ -25,6 +25,7 @@ import Diagram, { motionFrames, getDiagramType } from "../Diagram";
 import CharacterAnimation from "../CharacterAnimation";
 import { animationFrames, animationDurations } from "../data/animation.js";
 import NotFoundPage from "./NotFoundPage";
+import DeviceDrawingGuide from "../DeviceDrawingGuide.jsx";
 const lessons = weeks.flatMap((w) => w.lessons);
 export default function LessonPage() {
   const { id } = useParams();
@@ -116,6 +117,13 @@ function LessonContent({ lesson }) {
       </p>
       <div className="lesson-layout">
         <div>
+          {animationFrames[diagramType] && (
+            <p>
+              <Link className="primary" to={`/animation/${diagramType}/1`}>
+                Рисовать каждую позу в 12 последовательных шагах
+              </Link>
+            </p>
+          )}
           <div className="lesson-canvas">
             <div className="canvas-label">
               <span>{motion ? "КЛЮЧЕВЫЕ ПОЗЫ" : "ПОШАГОВАЯ СХЕМА"}</span>
@@ -203,6 +211,16 @@ function LessonContent({ lesson }) {
           </div>
         </div>
         <div className="lesson-instructions">
+          <DeviceDrawingGuide
+            technique={
+              animationFrames[diagramType]
+                ? "animation"
+                : diagramType === "light"
+                  ? "shade"
+                  : "sketch"
+            }
+            compact
+          />
           <div className="prep">
             <span className="eyebrow">ПОДГОТОВЬ ПЛАНШЕТ</span>
             <label className="app-inline">

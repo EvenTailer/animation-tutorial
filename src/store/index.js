@@ -5,6 +5,7 @@ import {
   STORAGE_KEY,
   defaultAppState,
   isAnimationKey,
+  isAnimationDrawingKey,
   isDrawingKey,
   isRecord,
   loadPersistedState,
@@ -71,6 +72,22 @@ const progressSlice = createSlice({
       if (state.animation[key]) delete state.animation[key];
       else state.animation[key] = true;
     },
+    toggleAnimationDrawingStep(state, action) {
+      const { type, frame, step } = isRecord(action.payload)
+        ? action.payload
+        : {};
+      const key = `${type}:${frame}:${step}`;
+      if (!isAnimationDrawingKey(key)) return;
+      state.animationDrawing ||= {};
+      if (state.animationDrawing[key]) delete state.animationDrawing[key];
+      else state.animationDrawing[key] = true;
+      const complete = Array.from(
+        { length: 12 },
+        (_, i) => state.animationDrawing[`${type}:${frame}:${i}`],
+      ).every(Boolean);
+      if (complete) state.animation[`${type}:${frame}`] = true;
+      else delete state.animation[`${type}:${frame}`];
+    },
     setLastLesson(state, action) {
       const id = action.payload;
       if (normalizeProgress({ lessons: [id] }).lessons.length === 1)
@@ -102,6 +119,7 @@ export const {
   toggleDrawingStep,
   setDrawingCursor,
   toggleAnimationFrame,
+  toggleAnimationDrawingStep,
   setLastLesson,
   replaceProgress,
   resetProgress,

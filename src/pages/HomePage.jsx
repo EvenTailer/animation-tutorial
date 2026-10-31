@@ -72,11 +72,11 @@ export default function HomePage() {
     (s) => drawingProgress[`duck:${s.id}`],
   ).length;
   const drawingWeekStages = {
-    3: Array.from({ length: 12 }, (_, i) => i),
-    4: Array.from({ length: 12 }, (_, i) => i + 12),
-    5: Array.from({ length: 24 }, (_, i) => i + 24),
-    6: Array.from({ length: 12 }, (_, i) => i + 48),
-    10: Array.from({ length: 36 }, (_, i) => i),
+    3: Array.from({ length: 24 }, (_, i) => i),
+    4: Array.from({ length: 12 }, (_, i) => i + 24),
+    5: Array.from({ length: 24 }, (_, i) => i + 36),
+    6: Array.from({ length: 24 }, (_, i) => i + 60),
+    10: Array.from({ length: 96 }, (_, i) => i),
   };
   function weekDrawingProgress(w) {
     const indices = drawingWeekStages[w.id];
@@ -114,8 +114,11 @@ export default function HomePage() {
             асимметричная механика. Изучай его арт и движение: ожидание, бег и
             прыжок. Атаку разработаем позже.
           </p>
-          <button className="primary" onClick={() => openAnimation("run")}>
-            Анимировать нового героя
+          <button
+            className="primary"
+            onClick={() => openMasterclass("duck", 0)}
+          >
+            Нарисовать именно этот арт
             <ArrowUpRight size={20} />
           </button>
           <button
@@ -126,7 +129,7 @@ export default function HomePage() {
           </button>
           <div className="hero-meta">
             <span>
-              <Clock size={15} /> Движение · без спешки
+              <Clock size={15} /> От композиции до цвета · без спешки
             </span>
             <span>
               Пройдено {duckDone}/{duckSteps.length}
@@ -161,10 +164,10 @@ export default function HomePage() {
         aria-label="Путь к законченному рисунку"
       >
         <div>
-          <span className="eyebrow">РИСОВАНИЕ · НОВЫЕ АРТЫ В ПРОФИЛЬ</span>
+          <span className="eyebrow">РИСОВАНИЕ · ИСХОДНЫЕ АРТЫ</span>
           <h2>От первых линий до нового персонажа.</h2>
           <p>
-            60 новых шагов утёнка и 36 шагов льва Гордыни: профильная голова,
+            84 шага исходного арта утёнка и 96 шагов льва Гордыни: композиция,
             одежда, разные конечности и цвет. Каждый этап сопровождается новым
             рисунком для бокового вида метроидвании.
           </p>
@@ -217,13 +220,13 @@ export default function HomePage() {
             w.id === 9
               ? "Чистота движения"
               : w.id === 10
-                ? "Лев Гордыня — рисунок в профиль"
+                ? "Подробный арт льва Гордыни"
                 : roadmapCopy[w.id]?.[0] || w.title;
           const weekSubtitle =
             w.id === 9
               ? "Прыжок, вес и стабильность без атаки"
               : w.id === 10
-                ? "36 новых действий от головы до цвета"
+                ? "96 действий от композиции до отделки"
                 : roadmapCopy[w.id]?.[1] || w.subtitle;
           const animation = { 7: "idle", 8: "run", 9: "jump" }[w.id];
           const animationDone = progress.animation;

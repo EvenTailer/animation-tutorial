@@ -253,3 +253,33 @@
 .as-controls {
   border-bottom: 1px solid var(--line);
 }
+
+.as-step-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 14px 0;
+  margin-bottom: 16px;
+}
+.as-step-strip button {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 14px;
+  font-size: 11px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 5px;
+  color: var(--ink);
+}
+.as-step-strip button.selected {
+  background: var(--accent, #d7ee87);
+  color: #26341f;
+}
+.as-study-nav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}

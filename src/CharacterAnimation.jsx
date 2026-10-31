@@ -1,8 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { animationFrames, animationLessons } from "./data/animation.js";
 import { animationSheets } from "./data/animationSheets.js";
-import { drawAnimationFrame, loadAnimationImage } from "./animationRaster.js";
+import {
+  drawAnimationFrame,
+  drawAnimationStudy,
+  loadAnimationImage,
+} from "./animationRaster.js";
 import "./character-animation.css";
+import { drawingStepNames } from "./data/animationDrawing.js";
 export {
   animationFrames,
   animationDurations,
@@ -14,6 +19,7 @@ export default function CharacterAnimation({
   type = "idle",
   frame = 0,
   ghost = false,
+  studyStage = null,
 }) {
   const selected = Object.hasOwn(animationSheets, type) ? type : "idle";
   const sheet = animationSheets[selected],
@@ -54,8 +60,11 @@ export default function CharacterAnimation({
         (index + count - 1) % count,
         { opacity: 0.2 },
       );
-    drawAnimationFrame(context, current.image, selected, index);
-  }, [current.image, selected, index, count, ghost, sheet]);
+    if (studyStage === null)
+      drawAnimationFrame(context, current.image, selected, index);
+    else
+      drawAnimationStudy(context, current.image, selected, index, studyStage);
+  }, [current.image, selected, index, count, ghost, sheet, studyStage]);
   return (
     <figure className="character-animation" aria-label={sheet.title}>
       <figcaption className="character-animation-heading">
@@ -79,7 +88,7 @@ export default function CharacterAnimation({
             width={sheet.output.width}
             height={sheet.output.height}
             role="img"
-            aria-label={`${sheet.title}: ${caption}. Полноцветный герой в профиль.`}
+            aria-label={`${sheet.title}: ${caption}. ${studyStage === null ? "Эталон готовой позы." : `Построение: ${drawingStepNames[studyStage]}.`}`}
           />
         )}
         {current.status === "loading" && (
@@ -98,9 +107,9 @@ export default function CharacterAnimation({
         <span>{animationLessons[selected][index].focus}</span>
       </div>
       <p className="character-animation-note">
-        Отдельные растровые позы героя в профиль для метроидвании. Правая рука и
-        левая голень остаются механическими. Масштаб одинаков во всех кадрах
-        движения; калька показывает предыдущий арт.
+        Эталон позы сохраняет стороны конечностей. Рисуй каждую позу по
+        показанному построению: ближняя правая рука — механическая, дальняя
+        левая голень — механическая. Калька показывает предыдущую позу.
       </p>
     </figure>
   );

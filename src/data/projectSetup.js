@@ -1,6 +1,6 @@
 export const projectCanvases = Object.freeze({
-  duck: Object.freeze({ width: 2400, height: 3200 }),
-  boss: Object.freeze({ width: 2400, height: 3600 }),
+  duck: Object.freeze({ width: 3600, height: 2400 }),
+  boss: Object.freeze({ width: 3600, height: 2400 }),
 });
 
 export function canvasLabel(character = "duck") {

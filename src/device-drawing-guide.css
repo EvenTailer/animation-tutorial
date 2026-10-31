@@ -1,0 +1,195 @@
+.device-drawing-guide {
+  margin: 24px 0;
+  padding: clamp(16px, 3vw, 28px);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.ddg-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: start;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.ddg-header h3 {
+  margin: 5px 0 0;
+  font-size: 20px;
+  line-height: 1.4;
+}
+.ddg-header label {
+  display: grid;
+  gap: 6px;
+  max-width: 100%;
+  font-size: 12px;
+}
+.ddg-header select {
+  max-width: 100%;
+  padding: 10px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font: inherit;
+}
+.ddg-kicker {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.ddg-current-tool {
+  padding: 18px;
+  background: color-mix(in srgb, var(--ink) 3%, var(--panel));
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+.ddg-current-tool h4 {
+  font-size: 18px;
+  margin: 5px 0 12px;
+  line-height: 1.4;
+}
+.device-drawing-guide p {
+  margin: 12px 0;
+  max-width: 80ch;
+}
+.ddg-settings {
+  margin: 15px 0;
+  display: grid;
+  gap: 10px;
+}
+.ddg-settings > div {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: 14px;
+}
+.ddg-settings dt {
+  font-weight: 600;
+  color: var(--ink);
+}
+.ddg-settings dd {
+  margin: 0;
+}
+.device-drawing-guide details {
+  margin: 12px 0;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.device-drawing-guide summary {
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 1.6;
+}
+.device-drawing-guide .ddg-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+.ddg-input-options,
+.ddg-lesson-tabs,
+.ddg-step-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 15px 0;
+}
+.device-drawing-guide button {
+  cursor: pointer;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--ink);
+  line-height: 1.5;
+}
+.device-drawing-guide button[aria-pressed="true"] {
+  border-color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 9%, var(--panel));
+  font-weight: 600;
+}
+.device-drawing-guide button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.device-drawing-guide :is(button, select, summary, input):focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.ddg-practice {
+  margin: 24px 0;
+}
+.ddg-practice h4 {
+  font-size: 17px;
+  margin: 0 0 12px;
+}
+.ddg-action {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--ink);
+  padding: 16px;
+  border-radius: 5px;
+}
+.ddg-step-label {
+  font-size: 11px;
+  color: var(--muted);
+}
+.ddg-check {
+  display: flex;
+  align-items: start;
+  gap: 9px;
+  font-size: 12px;
+}
+.ddg-check input {
+  width: 17px;
+  height: 17px;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+.ddg-feedback {
+  padding: 0 16px;
+}
+.ddg-sources ul {
+  padding-left: 20px;
+}
+.ddg-sources li {
+  margin: 7px 0;
+}
+.ddg-sources a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ddg-compact {
+  padding: 16px;
+  font-size: 13px;
+}
+.ddg-compact .ddg-current-tool {
+  padding: 13px;
+}
+@media (max-width: 560px) {
+  .ddg-header {
+    display: block;
+  }
+  .ddg-header label {
+    margin-top: 16px;
+  }
+  .ddg-header select {
+    width: 100%;
+  }
+  .ddg-settings > div {
+    grid-template-columns: 1fr;
+    gap: 1px;
+  }
+  .ddg-step-buttons button {
+    flex: 1 1 140px;
+  }
+  .ddg-feedback {
+    padding: 0;
+  }
+}
