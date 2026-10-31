@@ -1,12 +1,14 @@
+import { COURSE_COUNTS, ANIMATION_COUNTS } from "../routing/paths.js";
+
 export const STORAGE_KEY = "gramilya-state-v1";
 export const STORAGE_VERSION = 1;
 export const BACKUP_VERSION = 4;
+export const CONTENT_REVISION = 4;
 
 const themes = new Set(["paper", "light", "dark"]);
 const devices = new Set(["ipad", "samsung", "huawei"]);
 const characters = Object.keys(COURSE_COUNTS);
-// The microstep course deliberately started a new ID namespace after v1 stages.
-const firstDrawingStep = 101;
+// Profile artwork uses explicit IDs; numeric IDs belong to former courses.
 const forbiddenKeys = new Set(["__proto__", "constructor", "prototype"]);
 const lessonPattern = /^w(?:[1-9]|10)-l[1-3]$/;
 
@@ -26,19 +28,32 @@ function allowlist(values) {
 
 export function isDrawingKey(key) {
   if (typeof key !== "string") return false;
-  const match = /^(duck|boss):(duck|boss)-([1-9]\d{0,5})$/.exec(key);
+  const match = /^(duck|boss):(duck|boss)-profile-v4-([1-9]\d{0,2})$/.exec(key);
   if (!match || match[1] !== match[2]) return false;
   const stepNumber = Number(match[3]);
-  return (
-    stepNumber >= firstDrawingStep &&
-    stepNumber < firstDrawingStep + COURSE_COUNTS[match[1]]
-  );
+  return stepNumber >= 1 && stepNumber <= COURSE_COUNTS[match[1]];
+}
+
+function isPreviousDrawingKey(key) {
+  if (typeof key !== "string") return false;
+  const match = /^(duck|boss):(duck|boss)-(\d{1,6})$/.exec(key);
+  if (!match || match[1] !== match[2]) return false;
+  const step = Number(match[3]);
+  const count = COURSE_COUNTS[match[1]];
+  return (step >= 1 && step <= count) || (step >= 101 && step < 101 + count);
 }
 
 export function isAnimationKey(key) {
   if (typeof key !== "string") return false;
   const match = /^(idle|run|jump|hit):(0|[1-9]\d{0,3})$/.exec(key);
   return !!match && Number(match[2]) < ANIMATION_COUNTS[match[1]];
+}
+
+function isPreviousAnimationKey(key) {
+  if (typeof key !== "string") return false;
+  const previousCounts = { idle: 4, run: 8, jump: 6, hit: 6 };
+  const match = /^(idle|run|jump|hit):(0|[1-9]\d{0,3})$/.exec(key);
+  return !!match && Number(match[2]) < previousCounts[match[1]];
 }
 
 function trueMap(value, predicate, allowed) {
@@ -90,7 +105,9 @@ export function normalizeProgress(value, constraints = {}) {
       : 0;
   }
   const fallbackLesson = lessonIds?.values().next().value || "w1-l1";
+  const sameRevision = input.contentRevision === CONTENT_REVISION;
   return {
+    contentRevision: CONTENT_REVISION,
     lessons: [
       ...new Set(
         Array.isArray(input.lessons) ? input.lessons.filter(validLesson) : [],
@@ -99,14 +116,24 @@ export function normalizeProgress(value, constraints = {}) {
     drawing: trueMap(input.drawing, isDrawingKey, constraints.drawingKeys),
     cursors,
     animation: trueMap(
-      input.animation,
+      sameRevision ? input.animation : {},
       isAnimationKey,
       constraints.animationKeys,
     ),
-    // Old broad-stage marks are archival; they never become current microsteps.
-    legacyDrawing: trueMap(input.legacyDrawing, (key) =>
-      /^[a-z0-9][a-z0-9:_-]{0,120}$/i.test(key),
-    ),
+    // Numeric marks retain their original keys in the archive and never count
+    // toward the new profile drawings. Existing archives survive round trips.
+    legacyDrawing: {
+      ...trueMap(input.legacyDrawing, (key) =>
+        /^[a-z0-9][a-z0-9:_-]{0,120}$/i.test(key),
+      ),
+      ...trueMap(input.drawing, isPreviousDrawingKey),
+    },
+    // Animation kept the same frame keys, so only an explicit revision makes
+    // those keys current. Unversioned earlier marks are archived once.
+    legacyAnimation: {
+      ...trueMap(input.legacyAnimation, isPreviousAnimationKey),
+      ...trueMap(sameRevision ? {} : input.animation, isPreviousAnimationKey),
+    },
     lastLesson: validLesson(input.lastLesson)
       ? input.lastLesson
       : fallbackLesson,
@@ -260,4 +287,3 @@ export function parseBackup(source, constraints = {}) {
     ),
   };
 }
-import { COURSE_COUNTS, ANIMATION_COUNTS } from "../routing/paths.js";

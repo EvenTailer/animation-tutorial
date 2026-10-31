@@ -25,11 +25,11 @@ import CharacterAnimation, {
 } from "./CharacterAnimation";
 import "./animation-studio.css";
 import { apps } from "./data/apps.js";
+import { exportAnimationAtlas } from "./animationRaster.js";
 const names = {
   idle: "Живое ожидание",
   run: "Бег",
   jump: "Прыжок",
-  hit: "Удар",
 };
 export default function AnimationStudio() {
   const params = useParams(),
@@ -51,7 +51,9 @@ export default function AnimationStudio() {
   const [playbackFrame, setPlaybackFrame] = useState(routeFrame),
     [playing, setPlaying] = useState(false),
     [ghost, setGhost] = useState(false),
-    [speed, setSpeed] = useState(1);
+    [speed, setSpeed] = useState(1),
+    [exporting, setExporting] = useState(false),
+    [exportError, setExportError] = useState("");
   const playbackLocation = useRef(location.key);
   const playbackActive = playing && playbackLocation.current === location.key;
   const frame = playbackActive ? playbackFrame : routeFrame;
@@ -103,6 +105,25 @@ export default function AnimationStudio() {
       setPlaying(true);
     }
   }
+  async function downloadFrames() {
+    setExporting(true);
+    setExportError("");
+    try {
+      const blob = await exportAnimationAtlas(type);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `duck-profile-${type}-frames.png`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      setExportError(
+        "Не удалось подготовить PNG. Проверь загрузку рисунков и повтори скачивание.",
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
   return (
     <section className="animation-studio">
       <span className="eyebrow">ПОСЛЕ РИСУНКА · ОЖИВЛЯЕМ ПОЛНОГО ГЕРОЯ</span>
@@ -112,9 +133,9 @@ export default function AnimationStudio() {
         Теперь в движении.
       </h1>
       <p className="intro">
-        Каждый кадр — одетый, раскрашенный персонаж. Разбери позу крупно, затем
-        повтори её на планшете. Рисунок из мастер-класса станет моделью для
-        лица, одежды и материалов.
+        Новый утёнок в профиль для метроидвании: малиновый жилет, механическая
+        правая рука и левая нога. Рассмотри нарисованные позы сбоку и повтори их
+        на планшете. Атаку добавим после разработки её идеи.
       </p>
       <p className="caption">
         Здесь ты рассматриваешь примеры, а рисуешь и сохраняешь свою анимацию в
@@ -134,6 +155,11 @@ export default function AnimationStudio() {
           </button>
         ))}
       </div>
+      <p className="caption">
+        Ожидание, бег и прыжок направлены вправо. Ракурс сохраняется на всех
+        кадрах: один видимый глаз, боковой клюв, разные руки и ноги. Бег показан
+        на месте, чтобы удобно сравнивать опору и полёт.
+      </p>
       <details className="as-setup" open>
         <summary>
           <Layers size={18} /> Подготовь анимационный документ
@@ -230,29 +256,28 @@ export default function AnimationStudio() {
           </div>
 
           <div className="as-player-art">
-            {ghost && (
-              <div className="as-onion" aria-hidden="true">
-                <CharacterAnimation
-                  type={type}
-                  frame={(frame + frames.length - 1) % frames.length}
-                />
-              </div>
-            )}
-            <CharacterAnimation type={type} frame={frame} />
+            <CharacterAnimation type={type} frame={frame} ghost={ghost} />
           </div>
           <p className="caption">
-            Проигрываются отдельные рисунки поз: меняются корпус и конечности.
-            Длительности фаз помогают разобрать ритм.
+            Проигрываются отдельные цветные рисунки. Общий размер кадров и линия
+            земли сохраняются, длительности фаз задают ритм.
           </p>
-          <a
+          <button
             className="text-button"
-            href={`/assets/duck-${type}-frames.png`}
-            download
+            onClick={downloadFrames}
+            disabled={exporting}
           >
-            <Download size={15} /> Скачать образец поз (PNG)
-          </a>
+            <Download size={15} />{" "}
+            {exporting ? "Готовим PNG…" : "Скачать эти кадры движения (PNG)"}
+          </button>
+          {exportError && (
+            <p className="caption" role="status">
+              {exportError}
+            </p>
+          )}
           <p className="caption">
-            Это учебный образец, не экспорт твоего рисунка.
+            В PNG попадут те же позы, масштаб и положение над землёй, что в
+            проигрывателе. Это образец движения для твоей работы.
           </p>
         </div>
         <div className="as-instruction">
@@ -270,8 +295,8 @@ export default function AnimationStudio() {
             <ul>
               <li>Размер головы, клюва и деталей костюма сохраняется.</li>
               <li>
-                Протез остаётся на той же стороне; одежда следует за плечами и
-                тазом.
+                Правая рука и левая голень героя остаются механическими; жилет и
+                поясная ткань следуют за корпусом.
               </li>
               <li>
                 Линия земли неподвижна; опорная стопа касается её, а в полёте
@@ -309,8 +334,9 @@ export default function AnimationStudio() {
         <p>{app.export}</p>
         <Link to="/tools">Настройки программ и резервная копия отметок</Link>
         <p>
-          Растровые позы созданы с помощью ИИ по исходному персонажу. Изучай
-          движение по ним, а точные детали модели сверяй с исходным листом.
+          Все показанные позы нарисованы заново по новому герою в боковом
+          ракурсе. Это ключевые рисунки: для более плавного игрового движения
+          добавь промежуточные позы, сохраняя профиль и стороны протезов.
         </p>
       </section>
     </section>

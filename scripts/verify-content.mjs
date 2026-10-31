@@ -2,6 +2,13 @@ import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { masterclasses } from "../src/data/masterclasses.js";
 import { weeks } from "../src/data/curriculum.js";
+import {
+  animationFrames,
+  animationDurations,
+  animationLessons,
+} from "../src/data/animation.js";
+import { animationSheets } from "../src/data/animationSheets.js";
+import { isDrawingKey } from "../src/store/storage.js";
 
 const root = new URL("../", import.meta.url);
 const ids = new Set();
@@ -13,6 +20,14 @@ for (const course of masterclasses) {
   for (const step of steps) {
     assert.ok(!ids.has(step.id), `Duplicate stage: ${step.id}`);
     ids.add(step.id);
+    assert.ok(
+      isDrawingKey(`${course.id}:${step.id}`),
+      `New course ID must save: ${step.id}`,
+    );
+    assert.ok(
+      step.sheet.includes("profile-") && step.sheet.endsWith("-v4.png"),
+      `Current lessons must use new profile art: ${step.sheet}`,
+    );
     for (const field of [
       "title",
       "goal",
@@ -67,21 +82,17 @@ const lessons = weeks.flatMap((week) => week.lessons);
 assert.equal(lessons.length, 30);
 assert.equal(new Set(lessons.map((lesson) => lesson.id)).size, 30);
 assert.equal(sheets.size, 8);
-for (const [motion, columns, rows] of [
-  ["run", 4, 2],
-  ["jump", 3, 2],
-  ["hit", 3, 2],
-  ["idle", 2, 2],
-]) {
-  const bytes = readFileSync(
-    new URL(`public/assets/duck-${motion}-frames.png`, root),
+assert.deepEqual(Object.keys(animationFrames).sort(), ["idle", "jump", "run"]);
+for (const [motion, frames] of Object.entries(animationFrames)) {
+  assert.equal(animationDurations[motion].length, frames.length);
+  assert.equal(animationLessons[motion].length, frames.length);
+  assert.ok(animationDurations[motion].every((ms) => ms > 0));
+  const sheet = animationSheets[motion];
+  assert.equal(sheet.frames.length, frames.length);
+  assert.ok(existsSync(new URL(`public${sheet.src}`, root)));
+  console.log(
+    `${motion}: ${frames.length} side-profile drawings and matching lessons`,
   );
-  assert.equal(bytes.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
-  assert.ok(
-    bytes.readUInt32BE(16) / columns >= 200 &&
-      bytes.readUInt32BE(20) / rows >= 200,
-  );
-  console.log(`${motion}: ${columns * rows} full-character poses available`);
 }
 console.log(
   "References, unique panel assignments, image grids and 30 supporting lessons verified.",

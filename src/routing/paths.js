@@ -1,7 +1,7 @@
 export const COURSE_COUNTS = Object.freeze({ duck: 60, boss: 36 });
 export const ANIMATION_COUNTS = Object.freeze({
   idle: 4,
-  run: 8,
+  run: 6,
   jump: 6,
   hit: 6,
 });

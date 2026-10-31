@@ -1,85 +1,65 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { animationFrames, animationLessons } from "./data/animation.js";
+import { animationSheets } from "./data/animationSheets.js";
+import { drawAnimationFrame, loadAnimationImage } from "./animationRaster.js";
 import "./character-animation.css";
-
-const sheets = {
-  run: {
-    src: "/assets/duck-run-frames.png",
-    columns: 4,
-    rows: 2,
-    title: "Бег кибер-утёнка",
-  },
-  jump: {
-    src: "/assets/duck-jump-frames.png",
-    columns: 3,
-    rows: 2,
-    title: "Прыжок кибер-утёнка",
-  },
-  hit: {
-    src: "/assets/duck-hit-frames.png",
-    columns: 3,
-    rows: 2,
-    title: "Удар кибер-утёнка",
-  },
-  idle: {
-    src: "/assets/duck-idle-frames.png",
-    columns: 2,
-    rows: 2,
-    title: "Живое ожидание кибер-утёнка",
-  },
-};
-
-import {
-  animationFrames,
-  animationDurations,
-  animationLessons,
-} from "./data/animation.js";
 export {
   animationFrames,
   animationDurations,
   animationLessons,
 } from "./data/animation.js";
-export default function CharacterAnimation({ type = "idle", frame = 0 }) {
-  const selected = Object.hasOwn(sheets, type) ? type : "idle",
-    sheet = sheets[selected];
-  const count = animationFrames[selected].length,
-    number = Number.isFinite(frame) ? Math.floor(frame) : 0,
-    index = ((number % count) + count) % count;
+export { animationSheets } from "./data/animationSheets.js";
+
+export default function CharacterAnimation({
+  type = "idle",
+  frame = 0,
+  ghost = false,
+}) {
+  const selected = Object.hasOwn(animationSheets, type) ? type : "idle";
+  const sheet = animationSheets[selected],
+    count = sheet.frames.length;
+  const index =
+    ((Math.floor(Number.isFinite(frame) ? frame : 0) % count) + count) % count;
+  const canvas = useRef(null);
   const [loaded, setLoaded] = useState({
     src: null,
-    aspect: 1,
+    image: null,
     status: "loading",
   });
+  const current =
+    loaded.src === sheet.src ? loaded : { status: "loading", image: null };
+  const caption = animationFrames[selected][index];
   useEffect(() => {
     let active = true;
-    const img = new Image();
-    img.onload = () => {
-      if (active)
-        setLoaded({
-          src: sheet.src,
-          aspect:
-            img.naturalWidth / sheet.columns / (img.naturalHeight / sheet.rows),
-          status: "ready",
-        });
-    };
-    img.onerror = () => {
-      if (active) setLoaded({ src: sheet.src, aspect: 1, status: "error" });
-    };
-    img.src = sheet.src;
+    loadAnimationImage(selected).then(
+      (image) =>
+        active && setLoaded({ src: sheet.src, image, status: "ready" }),
+      () =>
+        active && setLoaded({ src: sheet.src, image: null, status: "error" }),
+    );
     return () => {
       active = false;
-      img.onload = null;
-      img.onerror = null;
     };
-  }, [sheet.src, sheet.columns, sheet.rows]);
-  const current =
-      loaded.src === sheet.src ? loaded : { aspect: 1, status: "loading" },
-    col = index % sheet.columns,
-    row = Math.floor(index / sheet.columns),
-    caption = animationFrames[selected][index];
+  }, [selected, sheet.src]);
+  useEffect(() => {
+    const context = canvas.current?.getContext("2d");
+    if (!context) return;
+    context.clearRect(0, 0, sheet.output.width, sheet.output.height);
+    if (!current.image) return;
+    if (ghost)
+      drawAnimationFrame(
+        context,
+        current.image,
+        selected,
+        (index + count - 1) % count,
+        { opacity: 0.2 },
+      );
+    drawAnimationFrame(context, current.image, selected, index);
+  }, [current.image, selected, index, count, ghost, sheet]);
   return (
     <figure className="character-animation" aria-label={sheet.title}>
       <figcaption className="character-animation-heading">
-        <span>{sheet.title}</span>
+        <span>{sheet.title} · новый герой</span>
         <span>
           Кадр {index + 1} / {count}
         </span>
@@ -90,31 +70,26 @@ export default function CharacterAnimation({ type = "idle", frame = 0 }) {
       >
         {current.status === "error" ? (
           <p className="character-animation-error" role="status">
-            Не удалось загрузить рисунки движения. Проверь соединение и открой
-            занятие ещё раз.
+            Не удалось загрузить боковые кадры движения. Обнови страницу.
           </p>
         ) : (
-          <div
-            className="character-animation-raster"
+          <canvas
+            ref={canvas}
+            className="character-animation-canvas"
+            width={sheet.output.width}
+            height={sheet.output.height}
             role="img"
-            aria-label={`${sheet.title}: ${caption}. Полноцветная ключевая поза исходного персонажа.`}
-            style={{
-              aspectRatio: current.aspect,
-              maxWidth: `${Math.max(280, Math.min(720, current.aspect * 560))}px`,
-              backgroundImage: `url("${sheet.src}")`,
-              backgroundSize: `${sheet.columns * 100}% ${sheet.rows * 100}%`,
-              backgroundPosition: `${(col / (sheet.columns - 1)) * 100}% ${(row / (sheet.rows - 1)) * 100}%`,
-            }}
+            aria-label={`${sheet.title}: ${caption}. Полноцветный герой в профиль.`}
           />
         )}
         {current.status === "loading" && (
-          <span className="character-animation-loading">
-            Загружаем рисунки…
+          <span className="character-animation-loading" role="status">
+            Загружаем боковые кадры…
           </span>
         )}
       </div>
       <div className="character-animation-ground">
-        <span>Земля — общий ориентир для всех кадров</span>
+        <span>Вид сбоку · вправо · холст 512 × 600 · общая земля</span>
       </div>
       <div className="character-animation-caption">
         <strong>
@@ -123,9 +98,9 @@ export default function CharacterAnimation({ type = "idle", frame = 0 }) {
         <span>{animationLessons[selected][index].focus}</span>
       </div>
       <p className="character-animation-note">
-        Рассматривай полную позу, затем повторяй её на планшете. Это ключевые
-        рисунки: для более плавного движения добавь промежуточные кадры. Стороны
-        киберглаза и протеза сверяй с исходным героем.
+        Отдельные растровые позы героя в профиль для метроидвании. Правая рука и
+        левая голень остаются механическими. Масштаб одинаков во всех кадрах
+        движения; калька показывает предыдущий арт.
       </p>
     </figure>
   );

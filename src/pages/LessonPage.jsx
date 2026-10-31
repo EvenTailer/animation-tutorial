@@ -22,12 +22,23 @@ import { lessonPath } from "../routing/paths.js";
 import { apps } from "../data/apps.js";
 import { weeks } from "../data/curriculum";
 import Diagram, { motionFrames, getDiagramType } from "../Diagram";
-import CharacterAnimation, { animationFrames } from "../CharacterAnimation";
+import CharacterAnimation from "../CharacterAnimation";
+import { animationFrames, animationDurations } from "../data/animation.js";
 import NotFoundPage from "./NotFoundPage";
 const lessons = weeks.flatMap((w) => w.lessons);
 export default function LessonPage() {
   const { id } = useParams();
   const lesson = lessons.find((l) => l.id === id);
+  if (lesson?.diagram === "hit")
+    return (
+      <section className="info-panel">
+        <h1>Атака появится позже</h1>
+        <p>
+          Сначала изучаем передвижение нового героя. Дизайн и анимацию атаки
+          определим отдельно.
+        </p>
+      </section>
+    );
   return lesson ? <LessonContent key={id} lesson={lesson} /> : <NotFoundPage />;
 }
 function LessonContent({ lesson }) {
@@ -59,12 +70,7 @@ function LessonContent({ lesson }) {
         motion
           ? setFrame((x) => (x + 1) % frameCount)
           : setStage((x) => (x + 1) % lesson.steps.length),
-      motion
-        ? {
-            hit: [450, 600, 120, 200, 450],
-            jump: [350, 450, 130, 300, 200, 450],
-          }[diagramType]?.[frame] || 300
-        : 1800,
+      motion ? animationDurations[diagramType]?.[frame] || 300 : 1800,
     );
     return () => clearInterval(t);
   }, [playing, motion, lesson, frame]);
@@ -102,9 +108,10 @@ function LessonContent({ lesson }) {
       </div>
       <p className="intro">
         Это дополнительные упражнения на отдельные навыки, а не недели основного
-        маршрута. Можно выбрать любое или вернуться к своему рисунку героя.{" "}
+        маршрута. Схемы объясняют основы; полный новый арт рисуем по боковым
+        пошаговым панелям.{" "}
         <button className="text-button" onClick={() => navigate("/draw")}>
-          Продолжить рисунок героя <ArrowRight size={15} />
+          Рисовать нового героя <ArrowRight size={15} />
         </button>
       </p>
       <div className="lesson-layout">
@@ -181,8 +188,8 @@ function LessonContent({ lesson }) {
                   ))}
                 </div>
                 <p className="caption">
-                  Схема проигрывается медленно для разбора; у прыжка и удара
-                  фазы имеют разную длительность. Для своей пробы начни с 6–8
+                  Движение проигрывается по учебному таймингу; у прыжка фазы
+                  имеют разную длительность. Для своей пробы начни с 6–8
                   кадров/с. Добавляй промежуточные рисунки между ключевыми
                   позами.
                 </p>
@@ -190,7 +197,7 @@ function LessonContent({ lesson }) {
             )}
             <p className="caption">
               {animationFrames[diagramType]
-                ? "Перед тобой полная поза героя. Повтори положение тела, затем перенеси знакомые детали костюма и материалы из мастер-класса."
+                ? "Перед тобой поза нового героя. Сверяй костюм и стороны механических конечностей с актуальным листом модели в шпаргалках."
                 : "Упрощённая схема объясняет принцип. Рисуй в своей программе; детали героя добавляй постепенно."}
             </p>
           </div>

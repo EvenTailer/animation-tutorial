@@ -39,9 +39,9 @@ test('URL course limits agree with the actual curriculum, not an obsolete 18/12-
 });
 
 test('all animation routes use the correct full sequence length',()=>{
-  assert.deepEqual(ANIMATION_COUNTS,{idle:4,run:8,jump:6,hit:6});
+  assert.deepEqual(ANIMATION_COUNTS,{idle:4,run:6,jump:6,hit:6});
   assert.equal(animationPath('idle',3),'/animation/idle/4');
-  assert.equal(animationPath('run',7),'/animation/run/8');
+  assert.equal(animationPath('run',5),'/animation/run/6');
   assert.equal(animationPath('jump',5),'/animation/jump/6');
   assert.equal(animationPath('hit',5),'/animation/hit/6');
   for(const [type,count] of Object.entries(ANIMATION_COUNTS)){

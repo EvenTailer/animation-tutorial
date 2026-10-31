@@ -3,6 +3,7 @@ import { ArrowUpRight, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector, selectProgress } from "../store/index.js";
 import { drawPath, COURSE_COUNTS } from "../routing/paths.js";
+import { characters } from "../data/characters.js";
 export default function LibraryPage() {
   const navigate = useNavigate();
   const progress = useAppSelector(selectProgress);
@@ -26,12 +27,13 @@ export default function LibraryPage() {
         Больше рисовать.
       </h1>
       <div className="reference-panel">
-        <h2>Твой референс</h2>
+        <h2>Актуальный лист модели героя</h2>
+        <p>{characters.duck.description}</p>
         <img
-          src="/assets/duck-hero.png"
-          alt="Четыре ракурса героя для изучения пропорций и деталей"
+          src={characters.duck.model}
+          alt="Шесть актуальных видов и поз кибер-утёнка"
         />
-        <a className="secondary" href="/assets/duck-hero.png" download>
+        <a className="secondary" href={characters.duck.model} download>
           Скачать референс <Download size={17} />
         </a>
       </div>
@@ -75,68 +77,53 @@ export default function LibraryPage() {
           </article>
         ))}
       </div>
-      <section className="info-panel">
-        <span className="eyebrow">ТВОЙ БОНУС</span>
-        <h2>Нарисуй этого кибер-волка</h2>
-        <p>
-          Полный разбор существующего босса: от пропорций до меха, механической
-          руки, одежды и финального цвета. Тридцать шесть рисованных этапов и
-          конкретные действия на планшете.
-        </p>
-        <div className="link-row">
-          <button className="primary" onClick={() => openMasterclass("boss")}>
-            Открыть мастер-класс <ArrowUpRight size={17} />
-          </button>
-          <a
-            className="secondary"
-            href="/assets/cyber-boss.png"
-            download="cyber-wolf-boss.png"
-          >
-            Скачать босса <Download size={17} />
-          </a>
-        </div>
-        <img
-          className="boss-reference"
-          src="/assets/cyber-boss.png"
-          alt="Пример дополнительного персонажа: кибер-волк"
-          onError={(e) => (e.currentTarget.style.display = "none")}
-        />
-        <p className="caption">
-          Сохранён тот же концепт босса. Иллюстрации созданы с помощью ИИ; при
-          работе сверяй детали с оригиналом.
-        </p>
-      </section>
       <section className="info-panel alternate-hero">
         <div>
-          <span className="eyebrow">
-            ОТДЕЛЬНЫЙ КОНЦЕПТ · ГОРОДСКОЙ РАЗВЕДЧИК
-          </span>
-          <h2>
-            Больше характера.
-            <br />
-            Всё ещё твой утёнок.
-          </h2>
-          <p>
-            Самостоятельный образ: индиговая куртка, бирюзовый шарф, компактный
-            протез и лёгкая обувь. Подвижный городской разведчик с собственным
-            силуэтом. Основной урок остаётся по исходному герою.
-          </p>
-          <a
-            className="secondary"
-            href="/assets/duck-hero-v3.png"
-            download="duck-hero-v3.png"
-          >
-            Скачать новый концепт <Download size={17} />
+          <span className="eyebrow">ТЕКУЩИЙ ДИЗАЙН · ГЕРОЙ</span>
+          <h2>Кибер-утёнок</h2>
+          <p>{characters.duck.description}</p>
+          <a className="secondary" href={characters.duck.art} download>
+            Скачать арт героя <Download size={17} />
           </a>
           <p className="caption">
-            Отдельный художественный вариант, созданный с помощью ИИ.
+            Передвижение изучаем по новому образу. Атака пока не определена.
           </p>
         </div>
         <img
-          src="/assets/duck-hero-v3.png"
-          alt="Новый концепт главного героя: харизматичный кибер-утёнок"
+          src={characters.duck.art}
+          alt="Текущий арт утёнка в малиновом жилете"
           loading="lazy"
         />
+      </section>
+      <section className="info-panel">
+        <span className="eyebrow">ТЕКУЩИЙ ДИЗАЙН · БОСС</span>
+        <h2>Гордыня — лев</h2>
+        <p>{characters.boss.description}</p>
+        <a className="secondary" href={characters.boss.art} download>
+          Скачать арт босса <Download size={17} />
+        </a>
+        <img
+          className="boss-reference"
+          src={characters.boss.art}
+          alt="Босс Гордыня: золотистая грива, длинное пальто и рапира"
+          loading="lazy"
+        />
+      </section>
+      <section className="info-panel">
+        <span className="eyebrow">УРОКИ НОВЫХ ПЕРСОНАЖЕЙ</span>
+        <h2>Нарисуй героя и льва сбоку</h2>
+        <p>
+          Новые растровые этапы показывают построение именно этих персонажей: 60
+          действий для утёнка и 36 для льва. Ракурс — профиль вправо.
+        </p>
+        <div className="link-row">
+          <button className="secondary" onClick={() => openMasterclass("duck")}>
+            Новый утёнок · 60 шагов <ArrowUpRight size={17} />
+          </button>
+          <button className="secondary" onClick={() => openMasterclass("boss")}>
+            Лев Гордыня · 36 шагов <ArrowUpRight size={17} />
+          </button>
+        </div>
       </section>
     </>
   );

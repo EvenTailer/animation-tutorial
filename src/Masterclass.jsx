@@ -244,10 +244,12 @@ export default function Masterclass() {
   );
   return (
     <section className="masterclass">
-      <div className="eyebrow">МАСТЕР-КЛАСС · ОТ ЭСКИЗА ДО ДЕТАЛЕЙ</div>
+      <div className="eyebrow">
+        НОВЫЕ ПЕРСОНАЖИ · РИСУЕМ ПРОФИЛЬ ДЛЯ МЕТРОИДВАНИИ
+      </div>
       <div className="mc-intro">
         <h1>
-          Нарисуем героя.
+          Рисуем новый арт.
           <br />
           Шаг за шагом.
         </h1>
@@ -285,6 +287,15 @@ export default function Masterclass() {
           </button>
         ))}
       </div>
+      <aside className="mc-route-update">
+        <strong>Один ракурс — от построения до цвета.</strong> Все панели этого
+        урока созданы по новым персонажам. Рисуем боковой вид вправо; исходный
+        арт помогает сверять костюм и материалы.{" "}
+        <a href={course.currentArt} target="_blank" rel="noreferrer">
+          Открыть актуальный референс
+        </a>
+        .
+      </aside>
       <div className="mc-course-intro">
         <div>
           <h2>{course.title}</h2>
@@ -292,7 +303,7 @@ export default function Masterclass() {
           <span className="mc-duration">{course.duration}</span>
         </div>
         <a className="secondary" href={course.reference} download>
-          <Download size={17} /> Скачать оригинал героя
+          <Download size={17} /> Скачать референс нового персонажа
         </a>
       </div>
       {earlierRoute && (

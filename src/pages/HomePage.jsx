@@ -12,6 +12,7 @@ import { weeks } from "../data/curriculum";
 import { masterclasses } from "../data/masterclasses";
 import { animationFrames } from "../data/animation.js";
 import Diagram from "../Diagram";
+import { characters } from "../data/characters.js";
 const roadmapCopy = {
   3: [
     "Голова: повторяй за мной",
@@ -109,12 +110,12 @@ export default function HomePage() {
             Твоими <em>руками.</em>
           </h1>
           <p>
-            Нарисуй именно этого кибер-утёнка: от построения до перьев,
-            механики, складок и финальных бликов. 60 небольших шагов: крупный
-            фрагмент и одно действие, которое ты повторяешь на планшете.
+            Новый кибер-утёнок: малиновый жилет, кремовый хохолок и
+            асимметричная механика. Изучай его арт и движение: ожидание, бег и
+            прыжок. Атаку разработаем позже.
           </p>
-          <button className="primary" onClick={() => openMasterclass()}>
-            {duckDone ? "Продолжить рисунок героя" : "Нарисовать этого героя"}
+          <button className="primary" onClick={() => openAnimation("run")}>
+            Анимировать нового героя
             <ArrowUpRight size={20} />
           </button>
           <button
@@ -125,7 +126,7 @@ export default function HomePage() {
           </button>
           <div className="hero-meta">
             <span>
-              <Clock size={15} /> 60 шагов · без спешки
+              <Clock size={15} /> Движение · без спешки
             </span>
             <span>
               Пройдено {duckDone}/{duckSteps.length}
@@ -139,8 +140,8 @@ export default function HomePage() {
             <span>↗</span>
           </div>
           <img
-            src="/assets/duck-hero.png"
-            alt="Референс кибер-утёнка спереди, с двух сторон и сзади"
+            src={characters.duck.art}
+            alt="Новый утёнок в малиновом жилете с механической рукой и ногой"
           />
           <div className="art-footer">
             <span>
@@ -160,19 +161,19 @@ export default function HomePage() {
         aria-label="Путь к законченному рисунку"
       >
         <div>
-          <span className="eyebrow">ОДИН ГЕРОЙ · ОДИН ЗАКОНЧЕННЫЙ РИСУНОК</span>
-          <h2>Не останавливаемся на эскизе.</h2>
+          <span className="eyebrow">РИСОВАНИЕ · НОВЫЕ АРТЫ В ПРОФИЛЬ</span>
+          <h2>От первых линий до нового персонажа.</h2>
           <p>
-            Построение → лицо и перья → одежда и механика → цвет → тени и
-            фактуры. Каждый этап продолжает предыдущий. В подарок — такой же
-            разбор кибер-волка.
+            60 новых шагов утёнка и 36 шагов льва Гордыни: профильная голова,
+            одежда, разные конечности и цвет. Каждый этап сопровождается новым
+            рисунком для бокового вида метроидвании.
           </p>
         </div>
         <button
           className="secondary"
           onClick={() => openMasterclass("duck", 0)}
         >
-          Все этапы отрисовки <ArrowUpRight size={18} />
+          Рисовать нового героя <ArrowUpRight size={18} />
         </button>
       </section>
       <section className="journey-strip">
@@ -212,9 +213,19 @@ export default function HomePage() {
       <div className="roadmap">
         {weeks.map((w, i) => {
           const drawing = weekDrawingProgress(w);
-          const weekTitle = roadmapCopy[w.id]?.[0] || w.title;
-          const weekSubtitle = roadmapCopy[w.id]?.[1] || w.subtitle;
-          const animation = { 7: "idle", 8: "run", 9: "hit" }[w.id];
+          const weekTitle =
+            w.id === 9
+              ? "Чистота движения"
+              : w.id === 10
+                ? "Лев Гордыня — рисунок в профиль"
+                : roadmapCopy[w.id]?.[0] || w.title;
+          const weekSubtitle =
+            w.id === 9
+              ? "Прыжок, вес и стабильность без атаки"
+              : w.id === 10
+                ? "36 новых действий от головы до цвета"
+                : roadmapCopy[w.id]?.[1] || w.subtitle;
+          const animation = { 7: "idle", 8: "run", 9: "jump" }[w.id];
           const animationDone = progress.animation;
           const poseCount = animation
             ? animationFrames[animation].filter(
@@ -251,27 +262,24 @@ export default function HomePage() {
                     className="week-reference"
                     src={
                       i === 5
-                        ? "/assets/duck-hero.png"
+                        ? characters.duck.model
                         : "/assets/duck-process-b.png"
                     }
                     alt="Детальная отрисовка исходного героя"
                     loading="lazy"
                   />
                 ) : i >= 6 && i <= 8 ? (
-                  <DrawingPreview
-                    step={{
-                      sheet: `/assets/duck-${["idle", "run", "hit"][i - 6]}-frames.png`,
-                      columns: i === 6 ? 2 : i === 7 ? 4 : 3,
-                      rows: 2,
-                      panel: 0,
-                      title: "Полноцветная поза героя",
-                    }}
+                  <img
+                    className="week-reference"
+                    src={characters.duck.model}
+                    alt="Актуальный лист модели для передвижения"
+                    loading="lazy"
                   />
                 ) : i === 9 ? (
                   <img
                     className="week-reference"
-                    src="/assets/cyber-boss.png"
-                    alt="Бонусный мастер-класс кибер-волка"
+                    src={characters.boss.art}
+                    alt="Гордыня — новый босс-лев"
                     loading="lazy"
                   />
                 ) : (
@@ -282,7 +290,13 @@ export default function HomePage() {
                   />
                 )}
                 <span>
-                  {i < 3 ? "ОСНОВЫ" : i < 7 ? "ПЕРСОНАЖ" : "ДВИЖЕНИЕ"}
+                  {i >= 2 && i <= 5
+                    ? "РИСУЕМ НОВЫЙ АРТ"
+                    : i === 9
+                      ? "НОВЫЙ РЕФЕРЕНС"
+                      : i < 2
+                        ? "ОСНОВЫ"
+                        : "ДВИЖЕНИЕ"}
                 </span>
               </div>
               <h3>{weekTitle}</h3>
@@ -309,7 +323,7 @@ export default function HomePage() {
                           ) ?? drawing.indices[0],
                         )
                       : i >= 6 && i <= 8
-                        ? openAnimation(["idle", "run", "hit"][i - 6])
+                        ? openAnimation(["idle", "run", "jump"][i - 6])
                         : open(
                             w.lessons.find((l) => !done.includes(l.id))?.id ||
                               w.lessons[0].id,
@@ -340,17 +354,18 @@ export default function HomePage() {
             твоим боссом?
           </h2>
           <p>
-            В подарок — подробная отрисовка этого кибер-волка. 36 небольших
-            шагов: морда и грива, рваная майка, механическая лапа, хвост, цвет и
-            текстуры. Его оригинал можно скачать.
+            Гордыня — новый босс-лев: золотистая грива, длинное пальто,
+            механическая рука и рапира. Скачай актуальный арт в шпаргалках. В
+            новом уроке нарисуем его сбоку: от головы и гривы до сюртука, хвоста
+            и цвета.
           </p>
           <button className="secondary" onClick={() => openMasterclass("boss")}>
-            Нарисовать босса по шагам <ArrowUpRight size={18} />
+            Рисовать льва Гордыню <ArrowUpRight size={18} />
           </button>
         </div>
         <img
-          src="/assets/cyber-boss.png"
-          alt="Дополнительный концепт кибер-зверя для самостоятельной практики"
+          src={characters.boss.art}
+          alt="Гордыня: лев в чёрно-малиновом пальто с рапирой"
           onError={(e) => (e.currentTarget.style.display = "none")}
         />
       </section>
